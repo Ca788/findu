@@ -26,5 +26,10 @@ module Findu
 
     # Use Sidekiq as the ActiveJob backend
     config.active_job.queue_adapter = :sidekiq
+
+    # Use UUID as default primary key
+    config.generators do |g|
+      g.orm :active_record, primary_key_type: :uuid
+    end
   end
 end
