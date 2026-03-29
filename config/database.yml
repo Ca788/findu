@@ -1,0 +1,21 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  username: <%= ENV.fetch("POSTGRES_USER", "postgres") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "postgres") %>
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
+  port: <%= ENV.fetch("DB_PORT", 5432) %>
+
+development:
+  <<: *default
+  database: findu_development
+
+test:
+  <<: *default
+  database: findu_test
+
+production:
+  <<: *default
+  database: findu_production
+  url: <%= ENV["DATABASE_URL"] %>
