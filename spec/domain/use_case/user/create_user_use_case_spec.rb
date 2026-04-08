@@ -78,7 +78,7 @@ RSpec.describe UseCase::User::CreateUserUseCase do
     context 'when email already exists in the organization' do
       let!(:existing_user) { create(:user, organization: organization, email: email) }
 
-      it 'raises an error' do
+      it 'raises ActiveRecord::RecordInvalid with email message' do
         expect {
           use_case.call(
             organization_id: organization.id,
@@ -87,7 +87,7 @@ RSpec.describe UseCase::User::CreateUserUseCase do
             password: password,
             password_confirmation: password
           )
-        }.to raise_error(StandardError, /Email/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Email/)
       end
 
       it 'does not create a new user' do
@@ -118,7 +118,7 @@ RSpec.describe UseCase::User::CreateUserUseCase do
     end
 
     context 'when password is too short' do
-      it 'raises a validation error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(
             organization_id: organization.id,
@@ -127,12 +127,12 @@ RSpec.describe UseCase::User::CreateUserUseCase do
             password: '123',
             password_confirmation: '123'
           )
-        }.to raise_error(StandardError, /Password/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Password/)
       end
     end
 
     context 'when password confirmation does not match' do
-      it 'raises a validation error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(
             organization_id: organization.id,
@@ -141,12 +141,12 @@ RSpec.describe UseCase::User::CreateUserUseCase do
             password: password,
             password_confirmation: 'wrong_confirmation'
           )
-        }.to raise_error(StandardError, /Password/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Password/)
       end
     end
 
     context 'when name is blank' do
-      it 'raises a validation error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(
             organization_id: organization.id,
@@ -155,12 +155,12 @@ RSpec.describe UseCase::User::CreateUserUseCase do
             password: password,
             password_confirmation: password
           )
-        }.to raise_error(StandardError, /Name/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Name/)
       end
     end
 
     context 'when email is blank' do
-      it 'raises a validation error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(
             organization_id: organization.id,
@@ -169,7 +169,7 @@ RSpec.describe UseCase::User::CreateUserUseCase do
             password: password,
             password_confirmation: password
           )
-        }.to raise_error(StandardError, /Email/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Email/)
       end
     end
   end

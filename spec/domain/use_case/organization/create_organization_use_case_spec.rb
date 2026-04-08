@@ -35,18 +35,18 @@ RSpec.describe UseCase::Organization::CreateOrganizationUseCase do
     end
 
     context 'when name is blank' do
-      it 'raises an error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(name: '', plan: plan)
-        }.to raise_error(StandardError, /Name/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Name/)
       end
     end
 
     context 'when name is nil' do
-      it 'raises an error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(name: nil, plan: plan)
-        }.to raise_error(StandardError)
+        }.to raise_error(ActiveRecord::RecordInvalid)
       end
     end
 
