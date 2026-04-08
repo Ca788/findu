@@ -39,6 +39,10 @@ gem "rack-cors"
 # JSON serialization
 gem "blueprinter"
 
+# Authentication
+gem "devise"
+gem "devise-jwt"
+
 # Sidekiq for background jobs
 gem "sidekiq", "~> 7.0"
 
