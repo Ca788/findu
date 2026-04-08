@@ -3,7 +3,6 @@
 class ApiResponseSerializer < Blueprinter::Base
 
   DEFAULT_OPTIONS = { success: true }.freeze
-  CONDITIONAL_FIELDS = %i[message error error_code pagination filter_options metadata].freeze
 
   class << self
     def render_data_array(objects, options = {})
@@ -37,13 +36,11 @@ class ApiResponseSerializer < Blueprinter::Base
     options.fetch(:success, DEFAULT_OPTIONS[:success])
   end
 
-  field :message do |_object, options|
+  field :message, if: ->(_field_name, _object, options) { options[:message].present? } do |_object, options|
     options[:message]
   end
 
-  field :error do |_object, options|
-    next unless options[:error]
-
+  field :error, if: ->(_field_name, _object, options) { options[:error].present? } do |_object, options|
     error = options[:error]
     {
       code: error.code,
@@ -80,11 +77,5 @@ class ApiResponseSerializer < Blueprinter::Base
 
   field :metadata, if: ->(_field_name, _object, options) { options[:metadata].present? } do |_object, options|
     options[:metadata]
-  end
-
-  CONDITIONAL_FIELDS.each do |field_name|
-    field field_name, if: ->(_f, _o, opts) { opts[field_name].present? } do |_o, opts|
-      opts[field_name]
-    end
   end
 end
