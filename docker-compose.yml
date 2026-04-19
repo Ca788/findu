@@ -12,6 +12,12 @@ services:
   redis:
     image: redis:7-alpine
 
+  maildev:
+    image: maildev/maildev
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
   web:
     build: .
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails db:prepare && bundle exec rails server -b 0.0.0.0"
@@ -23,6 +29,7 @@ services:
     depends_on:
       - db
       - redis
+      - maildev
     environment:
       RAILS_ENV: development
       POSTGRES_USER: postgres
@@ -31,6 +38,11 @@ services:
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379/0
       DATABASE_URL: postgres://postgres:postgres@db:5432/findu_development
+      MAILER_URL_CALLBACK: localhost
+      MAILER_URL_CALLBACK_PORT: 3000
+      MAILER_ADDRESS: maildev
+      MAILER_PORT: 1025
+      MAILER_DOMAIN: example.com
 
   sidekiq:
     build: .
@@ -41,6 +53,7 @@ services:
     depends_on:
       - db
       - redis
+      - maildev
     environment:
       RAILS_ENV: development
       POSTGRES_USER: postgres
@@ -49,6 +62,11 @@ services:
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379/0
       DATABASE_URL: postgres://postgres:postgres@db:5432/findu_development
+      MAILER_URL_CALLBACK: localhost
+      MAILER_URL_CALLBACK_PORT: 3000
+      MAILER_ADDRESS: maildev
+      MAILER_PORT: 1025
+      MAILER_DOMAIN: example.com
 
 volumes:
   postgres_data:

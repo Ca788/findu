@@ -35,8 +35,20 @@ Rails.application.configure do
 
   config.action_mailer.raise_delivery_errors = false
   config.action_mailer.perform_caching = false
-  config.action_mailer.delivery_method = :test
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  config.action_mailer.perform_deliveries = true
+
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("MAILER_URL_CALLBACK", "localhost"),
+    port: ENV.fetch("MAILER_URL_CALLBACK_PORT", 3000)
+  }
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address: ENV.fetch("MAILER_ADDRESS", "localhost"),
+    port: ENV.fetch("MAILER_PORT", 1025),
+    domain: ENV.fetch("MAILER_DOMAIN", "example.com"),
+    authentication: nil,
+    enable_starttls_auto: false
+  }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
