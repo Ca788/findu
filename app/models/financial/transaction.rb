@@ -12,26 +12,22 @@
 #  updated_at       :datetime         not null
 #  artifact_id      :uuid
 #  category_id      :uuid
-#  organization_id  :uuid             not null
 #  user_id          :uuid             not null
 #
 # Indexes
 #
-#  index_transactions_on_artifact_id      (artifact_id)
-#  index_transactions_on_category_id      (category_id)
-#  index_transactions_on_organization_id  (organization_id)
-#  index_transactions_on_user_id          (user_id)
+#  index_transactions_on_artifact_id  (artifact_id)
+#  index_transactions_on_category_id  (category_id)
+#  index_transactions_on_user_id      (user_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (artifact_id => artifacts.id)
 #  fk_rails_...  (category_id => categories.id)
-#  fk_rails_...  (organization_id => organizations.id)
 #  fk_rails_...  (user_id => users.id)
 #
 module Financial
   class Transaction < ApplicationRecord
-    belongs_to :organization
     belongs_to :user
     belongs_to :artifact, optional: true
     belongs_to :category, class_name: "Financial::Category", optional: true
