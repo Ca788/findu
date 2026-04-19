@@ -27,4 +27,8 @@ class User < ApplicationRecord
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true
+
+  def jwt_subject
+    id
+  end
 end
