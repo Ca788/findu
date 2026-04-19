@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 module Ocr
-  # Standardized result returned by every OCR provider.
-  # Keeps the domain decoupled from any specific OCR vendor.
   Result = Struct.new(
     :amount,
     :occurred_at,
