@@ -1,23 +1,13 @@
-# == Schema Information
-#
-# Table name: users
-#
-#  id              :uuid             not null, primary key
-#  deleted_at      :datetime
-#  email           :string           not null
-#  name            :string           not null
-#  password_digest :string
-#  phone           :string
-#  settings        :jsonb
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#
-# Indexes
-#
-#  index_users_on_email  (email) UNIQUE
-#
+# frozen_string_literal: true
+
 class User < ApplicationRecord
-  has_secure_password
+  include Devise::JWT::RevocationStrategies::JTIMatcher
+
+  devise :database_authenticatable,
+         :recoverable,
+         :validatable,
+         :jwt_authenticatable,
+         jwt_revocation_strategy: self
 
   has_many :artifacts, dependent: :destroy
   has_many :categories, class_name: "Financial::Category", dependent: :destroy
@@ -26,9 +16,4 @@ class User < ApplicationRecord
   has_many :insights, class_name: "Intelligence::Insight", dependent: :destroy
 
   validates :name, presence: true
-  validates :email, presence: true, uniqueness: true
-
-  def jwt_subject
-    id
-  end
 end
