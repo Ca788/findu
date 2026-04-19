@@ -16,6 +16,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_04_18_000000) do
   enable_extension "plpgsql"
 
   create_table "artifacts", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "organization_id", null: false
     t.uuid "user_id", null: false
     t.string "artifact_type", null: false
     t.string "source"
