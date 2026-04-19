@@ -12,7 +12,6 @@ Rails.application.routes.draw do
       end
 
       resource :user, only: [:show, :create], controller: "user"
-      resource :organization, only: [:show, :create], controller: "organization"
     end
   end
 end

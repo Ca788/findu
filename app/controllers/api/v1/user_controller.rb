@@ -5,7 +5,6 @@ module Api
     class UserController < Api::BaseController
       skip_before_action :authenticate_user!, only: [:create]
       skip_before_action :set_user, only: [:create]
-      skip_before_action :set_organization, only: [:create]
 
       def show
         render json: ApiResponseSerializer.render(
@@ -27,7 +26,7 @@ module Api
       private
 
       def user_params
-        params.require(:user).permit(:organization_id, :name, :email, :phone, :role, :password, :password_confirmation)
+        params.require(:user).permit(:name, :email, :phone, :password, :password_confirmation)
       end
     end
   end
