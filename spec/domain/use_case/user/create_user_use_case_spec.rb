@@ -48,10 +48,10 @@ RSpec.describe UseCase::User::CreateUserUseCase do
     context 'when email already exists' do
       let!(:existing_user) { create(:user, email: email) }
 
-      it 'raises an error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(name: name, email: email, password: password, password_confirmation: password)
-        }.to raise_error(StandardError, /Email/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Email/)
       end
 
       it 'does not create a new user' do
@@ -64,26 +64,26 @@ RSpec.describe UseCase::User::CreateUserUseCase do
     end
 
     context 'when password confirmation does not match' do
-      it 'raises a validation error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(name: name, email: email, password: password, password_confirmation: 'wrong')
-        }.to raise_error(StandardError, /Password/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Password/)
       end
     end
 
     context 'when name is blank' do
-      it 'raises a validation error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(name: '', email: email, password: password, password_confirmation: password)
-        }.to raise_error(StandardError, /Name/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Name/)
       end
     end
 
     context 'when email is blank' do
-      it 'raises a validation error' do
+      it 'raises ActiveRecord::RecordInvalid' do
         expect {
           use_case.call(name: name, email: '', password: password, password_confirmation: password)
-        }.to raise_error(StandardError, /Email/)
+        }.to raise_error(ActiveRecord::RecordInvalid, /Email/)
       end
     end
   end

@@ -21,9 +21,5 @@ class UseCase::User::CreateUserUseCase
     token = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
 
     Result.new(user: user, token: token)
-  rescue ActiveRecord::RecordInvalid => e
-    raise StandardError, e.record.errors.full_messages.join(", ")
-  rescue ActiveRecord::RecordNotUnique
-    raise StandardError, "A user with this email already exists."
   end
 end

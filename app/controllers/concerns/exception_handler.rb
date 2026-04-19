@@ -13,6 +13,26 @@ module ExceptionHandler
       handle_exception(e, :not_found, ErrorMapper.record_not_found)
     end
 
+    rescue_from ActiveRecord::RecordInvalid do |e|
+      Rails.logger.error(e)
+      render json: ApiResponseSerializer.render(
+        {},
+        success: false,
+        message: e.record.errors.full_messages.join(", "),
+        error_code: ErrorMapper.record_invalid.code
+      ), status: :unprocessable_entity
+    end
+
+    rescue_from ActiveRecord::RecordNotUnique do |e|
+      Rails.logger.error(e)
+      render json: ApiResponseSerializer.render(
+        {},
+        success: false,
+        message: "Record already exists",
+        error_code: ErrorMapper.record_invalid.code
+      ), status: :conflict
+    end
+
     rescue_from ActionController::ParameterMissing do |e|
       Rails.logger.error(e)
       render json: ApiResponseSerializer.render(

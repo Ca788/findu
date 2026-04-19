@@ -3,6 +3,8 @@
 module Api
   module V1
     class UserController < Api::BaseController
+      include ExceptionHandler
+
       skip_before_action :authenticate_user!, only: [:create]
       skip_before_action :set_user, only: [:create]
 
@@ -13,7 +15,13 @@ module Api
       end
 
       def create
-        result = UseCase::User::CreateUserUseCase.new.call(**user_params.to_h.symbolize_keys)
+        result = UseCase::User::CreateUserUseCase.new.call(
+          name: user_params[:name],
+          email: user_params[:email],
+          password: user_params[:password],
+          password_confirmation: user_params[:password_confirmation],
+          phone: user_params[:phone]
+        )
 
         response.set_header("Authorization", "Bearer #{result.token}")
 
