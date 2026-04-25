@@ -15,4 +15,14 @@ module PaginationParams
     return 1 if page < 1
     page
   end
+
+  def pagination_for(relation)
+    {
+      currentPage: relation.current_page,
+      nextPage: relation.next_page,
+      prevPage: relation.prev_page,
+      totalPages: relation.total_pages,
+      totalCount: relation.total_count
+    }
+  end
 end

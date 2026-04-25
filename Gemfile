@@ -39,6 +39,9 @@ gem "rack-cors"
 # JSON serialization
 gem "blueprinter"
 
+# Pagination
+gem "kaminari"
+
 # Authentication
 gem "devise"
 gem "devise-jwt"

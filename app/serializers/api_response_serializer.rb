@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class ApiResponseSerializer < Blueprinter::Base
-
   DEFAULT_OPTIONS = { success: true }.freeze
 
   class << self
@@ -9,26 +8,12 @@ class ApiResponseSerializer < Blueprinter::Base
       render({ data_array: objects }, options)
     end
 
-    def success(data = nil, options = {})
-      render({ data: data }, { success: true }.merge(options))
-    end
-
     def error(error_obj, options = {})
-      render_options = { success: false, error: error_obj }.merge(options)
-      render({}, render_options)
+      render({}, { success: false, error: error_obj }.merge(options))
     end
 
-    private
-
-    def extract_data_array(object)
-      return object[:data_array] if object.is_a?(Hash) && object.key?(:data_array)
-      object
-    end
-
-    def prepare_data_options(options)
-      return options unless options[:serializer]
-
-      options.merge(view: options[:serializer_view])
+    def when_option(key)
+      ->(_field_name, _object, options) { options[key].present? }
     end
   end
 
@@ -36,46 +21,31 @@ class ApiResponseSerializer < Blueprinter::Base
     options.fetch(:success, DEFAULT_OPTIONS[:success])
   end
 
-  field :message, if: ->(_field_name, _object, options) { options[:message].present? } do |_object, options|
-    options[:message]
-  end
+  field(:message,       if: when_option(:message))       { |_o, opts| opts[:message] }
+  field(:errorCode,     if: when_option(:error_code))    { |_o, opts| opts[:error_code] }
+  field(:pagination,    if: when_option(:pagination))    { |_o, opts| opts[:pagination] }
+  field(:filterOptions, if: when_option(:filterOptions)) { |_o, opts| opts[:filterOptions] }
+  field(:metadata,      if: when_option(:metadata))      { |_o, opts| opts[:metadata] }
 
-  field :error, if: ->(_field_name, _object, options) { options[:error].present? } do |_object, options|
-    error = options[:error]
+  field :error, if: when_option(:error) do |_object, options|
+    err = options[:error]
     {
-      code: error.code,
-      title: error.title,
-      description: error.description
+      code: err.code,
+      title: err.title,
+      description: err.description
     }.compact
   end
 
-  field :errorCode, if: ->(_field_name, _object, options) { options[:error_code].present? } do |_object, options|
-    options[:error_code]
-  end
-
-  field :pagination, if: ->(_field_name, _object, options) { options[:pagination].present? } do |_object, options|
-    options[:pagination]
-  end
-
-  field :filterOptions, if: ->(_field_name, _object, options) { options[:filterOptions].present? } do |_object, options|
-    options[:filterOptions]
-  end
-
   field :data, if: ->(_field_name, object, _options) { object.present? } do |object, options|
-    data_object = extract_data_array(object)
+    object = object[:data_array] if object.is_a?(Hash) && object.key?(:data_array)
 
-    if options[:serializer]
-      serialized = options[:serializer].render_as_hash(
-        data_object,
-        prepare_data_options(options)
+    if options[:serializer].present?
+      options[:serializer].render_as_hash(
+        object,
+        options.merge(view: options[:serializer_view])
       )
-      serialized[:data] || serialized
     else
-      data_object
+      object
     end
-  end
-
-  field :metadata, if: ->(_field_name, _object, options) { options[:metadata].present? } do |_object, options|
-    options[:metadata]
   end
 end

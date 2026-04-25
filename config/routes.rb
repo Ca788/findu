@@ -20,6 +20,10 @@ Rails.application.routes.draw do
 
       resource :user, only: [:show, :create], controller: "user"
       resource :password, only: [:create, :update], controller: "passwords"
+
+      namespace :financial do
+        resources :categories, only: [:index, :show, :create, :update, :destroy]
+      end
     end
   end
 end

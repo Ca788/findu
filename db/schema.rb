@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_04_19_205837) do
+ActiveRecord::Schema[7.0].define(version: 2026_04_20_220516) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -44,11 +44,9 @@ ActiveRecord::Schema[7.0].define(version: 2026_04_19_205837) do
 
   create_table "categories", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
-    t.uuid "parent_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
-    t.index ["parent_id"], name: "index_categories_on_parent_id"
     t.index ["user_id"], name: "index_categories_on_user_id"
   end
 
@@ -112,7 +110,6 @@ ActiveRecord::Schema[7.0].define(version: 2026_04_19_205837) do
 
   add_foreign_key "artifacts", "users"
   add_foreign_key "budgets", "users"
-  add_foreign_key "categories", "categories", column: "parent_id"
   add_foreign_key "categories", "users"
   add_foreign_key "insights", "users"
   add_foreign_key "installments", "transactions"
