@@ -22,7 +22,8 @@ Rails.application.routes.draw do
       resource :password, only: [:create, :update], controller: "passwords"
 
       namespace :financial do
-        resources :categories, only: [:index, :show, :create, :update, :destroy]
+        resources :categories,   only: [:index, :show, :create, :update, :destroy]
+        resources :transactions, only: [:index, :show, :create, :update, :destroy]
       end
     end
   end

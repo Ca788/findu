@@ -10,7 +10,14 @@ module ExceptionHandler
     end
 
     rescue_from ActiveRecord::RecordNotFound do |e|
-      handle_exception(e, :not_found, ErrorMapper.record_not_found)
+      message = ErrorMapper.record_not_found_message_for(e.model)
+      Rails.logger.error(e)
+      render json: ApiResponseSerializer.render(
+        {},
+        success: false,
+        message: message,
+        error_code: ErrorMapper.record_not_found.code
+      ), status: :not_found
     end
 
     rescue_from ActiveRecord::RecordInvalid do |e|

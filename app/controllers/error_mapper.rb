@@ -33,4 +33,12 @@ module ErrorMapper
   def self.unknown_error
     Error.new(500, "Unknown Error")
   end
+
+  # @param [String, nil] model_name eg. "Financial::Transaction"
+  # @return [String]
+  def self.record_not_found_message_for(model_name)
+    return record_not_found.message if model_name.blank?
+
+    "#{model_name.demodulize.titleize} not found"
+  end
 end

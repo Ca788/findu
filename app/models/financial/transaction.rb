@@ -28,6 +28,16 @@
 #
 module Financial
   class Transaction < ApplicationRecord
+
+    PERMITTED_ATTRIBUTES = %i[
+      amount
+      transaction_type
+      description
+      occurred_at
+      category_id
+      metadata
+    ].freeze
+
     belongs_to :user
     belongs_to :artifact, optional: true
     belongs_to :category, class_name: "Financial::Category", optional: true
@@ -36,7 +46,12 @@ module Financial
 
     enum transaction_type: { expense: "expense", income: "income" }
 
-    validates :amount, presence: true
+    validates :amount, presence: true, numericality: { greater_than: 0 }
     validates :transaction_type, presence: true
+
+    scope :by_type,        ->(type)        { where(transaction_type: type) if type.present? }
+    scope :by_category,    ->(category_id) { where(category_id: category_id) if category_id.present? }
+    scope :occurred_from,  ->(from)        { where("occurred_at >= ?", from) if from.present? }
+    scope :occurred_until, ->(to)          { where("occurred_at <= ?", to) if to.present? }
   end
 end

@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "../../../.."
+		},
+		{
+			"path": "../../../../../../incentify-engine/incentify-engine-backend"
+		}
+	],
+	"settings": {}
+}
