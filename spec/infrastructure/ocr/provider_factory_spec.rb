@@ -7,8 +7,8 @@ RSpec.describe Ocr::ProviderFactory do
     context 'when OCR_PROVIDER is unset' do
       before { ENV.delete("OCR_PROVIDER") }
 
-      it 'defaults to StubProvider' do
-        expect(described_class.build).to be_a(Ocr::StubProvider)
+      it 'defaults to Gemini::Provider' do
+        expect(described_class.build).to be_a(Ocr::Gemini::Provider)
       end
     end
 
@@ -16,8 +16,17 @@ RSpec.describe Ocr::ProviderFactory do
       before { ENV["OCR_PROVIDER"] = "stub" }
       after  { ENV.delete("OCR_PROVIDER") }
 
-      it 'returns StubProvider' do
-        expect(described_class.build).to be_a(Ocr::StubProvider)
+      it 'returns Stub::Provider' do
+        expect(described_class.build).to be_a(Ocr::Stub::Provider)
+      end
+    end
+
+    context 'when OCR_PROVIDER is "gemini"' do
+      before { ENV["OCR_PROVIDER"] = "gemini" }
+      after  { ENV.delete("OCR_PROVIDER") }
+
+      it 'returns Gemini::Provider' do
+        expect(described_class.build).to be_a(Ocr::Gemini::Provider)
       end
     end
 

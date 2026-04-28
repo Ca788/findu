@@ -4,13 +4,11 @@ module Ocr
   class ProviderFactory
     # @return [Ocr::Provider]
     def self.build
-      case ENV.fetch("OCR_PROVIDER", "stub")
+      case ENV.fetch("OCR_PROVIDER", "gemini")
       when "stub"
-        StubProvider.new
-      # when "openai_vision"
-      #   OpenaiVisionProvider.new
-      # when "google_vision"
-      #   GoogleVisionProvider.new
+        Stub::Provider.new
+      when "gemini"
+        Gemini::Provider.new
       else
         raise "Unsupported OCR provider: #{ENV['OCR_PROVIDER']}"
       end

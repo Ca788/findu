@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Ocr::StubProvider do
+RSpec.describe Ocr::Stub::Provider do
   subject(:provider) { described_class.new }
 
   describe '#extract' do

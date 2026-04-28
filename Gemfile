@@ -42,6 +42,10 @@ gem "blueprinter"
 # Pagination
 gem "kaminari"
 
+# LLM provider abstraction (used by OCR/AI infrastructure)
+gem "ruby_llm"
+gem "ruby_llm-schema"
+
 # Authentication
 gem "devise"
 gem "devise-jwt"
