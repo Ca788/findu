@@ -1,0 +1,58 @@
+# frozen_string_literal: true
+
+class UseCase::Artifact::ExtractArtifactDataUseCase
+  # @param [Ocr::Provider] provider
+  def initialize(provider: Ocr::ProviderFactory.build)
+    @provider = provider
+  end
+
+  # @param [Artifact] artifact
+  # @return [Artifact]
+  def call(artifact:)
+    raise ArgumentError, "artifact has no attached file" unless artifact.file.attached?
+
+    result = extract(artifact)
+    persist_success(artifact, result)
+    artifact
+  rescue StandardError => e
+    persist_failure(artifact, e)
+    raise
+  end
+
+  private
+
+  # @param [Artifact] artifact
+  # @return [Ocr::Result]
+  def extract(artifact)
+    artifact.file.open do |tempfile|
+      @provider.extract(tempfile)
+    end
+  end
+
+  # @param [Artifact] artifact
+  # @param [Ocr::Result] result
+  def persist_success(artifact, result)
+    artifact.update!(
+      status: :processed,
+      occurred_at: result.occurred_at,
+      processed_data: {
+        amount: result.amount&.to_s,
+        description: result.description,
+        raw_text: result.raw_text,
+        confidence: result.confidence,
+        metadata: result.metadata
+      }
+    )
+  end
+
+  # @param [Artifact] artifact
+  # @param [StandardError] error
+  def persist_failure(artifact, error)
+    Rails.logger.error("[Artifact##{artifact.id}] OCR failed: #{error.class} - #{error.message}")
+    artifact.update_columns(
+      status: "failed",
+      processed_data: { error: { class: error.class.name, message: error.message } },
+      updated_at: Time.current
+    )
+  end
+end

@@ -27,6 +27,7 @@ class Artifact < ApplicationRecord
   belongs_to :user
 
   has_one :financial_transaction, class_name: "Financial::Transaction"
+  has_one_attached :file
 
   enum status: { pending: "pending", processed: "processed", failed: "failed" }
 
