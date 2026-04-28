@@ -24,6 +24,11 @@ Rails.application.routes.draw do
       namespace :financial do
         resources :categories,   only: [:index, :show, :create, :update, :destroy]
         resources :transactions, only: [:index, :show, :create, :update, :destroy]
+        resources :budgets,      only: [:index, :show, :create, :update, :destroy] do
+          collection do
+            get :current
+          end
+        end
       end
     end
   end

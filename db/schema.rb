@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_04_20_220516) do
+ActiveRecord::Schema[7.0].define(version: 2026_04_27_235746) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -32,13 +32,15 @@ ActiveRecord::Schema[7.0].define(version: 2026_04_20_220516) do
 
   create_table "budgets", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id", null: false
-    t.integer "month", null: false
-    t.integer "year", null: false
     t.decimal "limit_amount", precision: 10, scale: 2
     t.datetime "deleted_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["user_id", "month", "year"], name: "index_budgets_on_user_id_and_month_and_year", unique: true
+    t.string "period_type", null: false
+    t.date "period_start", null: false
+    t.date "period_end", null: false
+    t.index ["period_type"], name: "index_budgets_on_period_type"
+    t.index ["user_id", "period_start", "period_end"], name: "index_budgets_on_user_id_and_period", unique: true
     t.index ["user_id"], name: "index_budgets_on_user_id"
   end
 

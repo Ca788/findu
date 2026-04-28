@@ -30,6 +30,16 @@ module ExceptionHandler
       ), status: :unprocessable_entity
     end
 
+    rescue_from ArgumentError do |e|
+      Rails.logger.error(e)
+      render json: ApiResponseSerializer.render(
+        {},
+        success: false,
+        message: e.message,
+        error_code: ErrorMapper.record_invalid.code
+      ), status: :unprocessable_entity
+    end
+
     rescue_from ActiveRecord::RecordNotUnique do |e|
       Rails.logger.error(e)
       render json: ApiResponseSerializer.render(
