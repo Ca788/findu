@@ -14,7 +14,7 @@ module Api
 
           render json: ApiResponseSerializer.render_data_array(
             categories,
-            serializer: ::Financial::CategorySerializer,
+            serializer: V1::Financial::CategorySerializer,
             pagination: pagination_for(categories)
           ), status: :ok
         end
@@ -24,7 +24,7 @@ module Api
 
           render json: ApiResponseSerializer.render(
             category,
-            serializer: ::Financial::CategorySerializer,
+            serializer: V1::Financial::CategorySerializer,
           ), status: :ok
         end
 
@@ -36,7 +36,7 @@ module Api
 
           render json: ApiResponseSerializer.render(
             category,
-            serializer: ::Financial::CategorySerializer,
+            serializer: V1::Financial::CategorySerializer,
             message: "Category created successfully."
           ), status: :created
         end
@@ -50,7 +50,7 @@ module Api
 
           render json: ApiResponseSerializer.render(
             category,
-            serializer: ::Financial::CategorySerializer,
+            serializer: V1::Financial::CategorySerializer,
             message: "Category updated successfully."
           ), status: :ok
         end

@@ -11,7 +11,7 @@ module Api
 
         render json: ApiResponseSerializer.render_data_array(
           artifacts,
-          serializer: ArtifactSerializer,
+          serializer: V1::ArtifactSerializer,
           serializer_view: :default,
           pagination: pagination_for(artifacts)
         ), status: :ok
@@ -22,7 +22,7 @@ module Api
 
         render json: ApiResponseSerializer.render(
           artifact,
-          serializer: ArtifactSerializer,
+          serializer: V1::ArtifactSerializer,
           serializer_view: :extended
         ), status: :ok
       end
@@ -37,7 +37,7 @@ module Api
 
         render json: ApiResponseSerializer.render(
           artifact,
-          serializer: ArtifactSerializer,
+          serializer: V1::ArtifactSerializer,
           serializer_view: :extended,
           message: "Artifact uploaded; OCR processing queued."
         ), status: :accepted

@@ -31,7 +31,7 @@ class Artifacts::ProcessOcrJob < ApplicationJob
 
   # @param [Artifact] artifact
   def perform(artifact)
-    uc = UseCase::Artifact::ExtractArtifactDataUseCase.new
-    uc.call(artifact: artifact)
+    artifact = UseCase::Artifact::ExtractArtifactDataUseCase.new.call(artifact: artifact)
+    UseCase::Artifact::CreateTransactionFromArtifactUseCase.new.call(artifact: artifact)
   end
 end

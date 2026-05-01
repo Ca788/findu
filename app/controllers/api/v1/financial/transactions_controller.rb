@@ -16,7 +16,7 @@ module Api
 
           render json: ApiResponseSerializer.render_data_array(
             transactions,
-            serializer: ::Financial::TransactionSerializer,
+            serializer: V1::Financial::TransactionSerializer,
             serializer_view: :default,
             pagination: pagination_for(transactions)
           ), status: :ok
@@ -27,7 +27,7 @@ module Api
 
           render json: ApiResponseSerializer.render(
             transaction,
-            serializer: ::Financial::TransactionSerializer,
+            serializer: V1::Financial::TransactionSerializer,
             serializer_view: :extended
           ), status: :ok
         end
@@ -40,7 +40,7 @@ module Api
 
           render json: ApiResponseSerializer.render(
             transaction,
-            serializer: ::Financial::TransactionSerializer,
+            serializer: V1::Financial::TransactionSerializer,
             serializer_view: :extended,
             message: "Transaction created successfully."
           ), status: :created
@@ -55,7 +55,7 @@ module Api
 
           render json: ApiResponseSerializer.render(
             transaction,
-            serializer: ::Financial::TransactionSerializer,
+            serializer: V1::Financial::TransactionSerializer,
             serializer_view: :extended,
             message: "Transaction updated successfully."
           ), status: :ok
