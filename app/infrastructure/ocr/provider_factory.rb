@@ -2,12 +2,10 @@
 
 module Ocr
   class ProviderFactory
-    # @param [String] artifact_type
+    # @param [String]
     # @return [Ocr::Provider]
     def self.build(artifact_type: "receipt")
       case ENV.fetch("OCR_PROVIDER", "gemini")
-      when "stub"
-        Stub::Provider.new
       when "gemini"
         Gemini::Provider.for(artifact_type)
       else

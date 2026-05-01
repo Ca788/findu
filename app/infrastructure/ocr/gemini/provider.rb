@@ -2,26 +2,27 @@
 
 module Ocr
   module Gemini
-    class Provider < Ocr::Provider
+    class Provider
       DEFAULT_MODEL = "gemini-2.5-flash"
 
       STRATEGIES = {
-        "receipt" => { schema: ReceiptSchema, prompt_builder: PromptBuilder.new }
+        "receipt" => { schema: Llm::Schemas::ReceiptSchema,
+                       prompt_builder: Llm::Prompts::ReceiptPromptBuilder.new }
       }.freeze
 
-      # @param [String] artifact_type
+      # @param [String]
       # @return [Ocr::Gemini::Provider]
       def self.for(artifact_type)
         strategy = STRATEGIES.fetch(artifact_type) { STRATEGIES["receipt"] }
         new(**strategy)
       end
 
-      # @param [Class] schema
-      # @param [Ocr::Gemini::PromptBuilder] prompt_builder
-      # @param [Ocr::Gemini::ResponseParser] response_parser
-      # @param [Ocr::Gemini::ImageResolver] image_resolver
-      def initialize(schema: ReceiptSchema,
-                     prompt_builder: PromptBuilder.new,
+      # @param [Class]
+      # @param [Ocr::Gemini::PromptBuilder]
+      # @param [Ocr::Gemini::ResponseParser]
+      # @param [Ocr::Gemini::ImageResolver]
+      def initialize(schema: Llm::Schemas::ReceiptSchema,
+                     prompt_builder: Llm::Prompts::ReceiptPromptBuilder.new,
                      response_parser: ResponseParser.new,
                      image_resolver: ImageResolver.new)
         @schema = schema
@@ -30,7 +31,7 @@ module Ocr
         @image_resolver = image_resolver
       end
 
-      # @param [String, IO, ActionDispatch::Http::UploadedFile] image
+      # @param [String, IO, ActionDispatch::Http::UploadedFile]
       # @return [Ocr::Result]
       def extract(image)
         path = @image_resolver.call(image)

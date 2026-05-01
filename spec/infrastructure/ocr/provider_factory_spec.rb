@@ -12,15 +12,6 @@ RSpec.describe Ocr::ProviderFactory do
       end
     end
 
-    context 'when OCR_PROVIDER is "stub"' do
-      before { ENV["OCR_PROVIDER"] = "stub" }
-      after  { ENV.delete("OCR_PROVIDER") }
-
-      it 'returns Stub::Provider' do
-        expect(described_class.build).to be_a(Ocr::Stub::Provider)
-      end
-    end
-
     context 'when OCR_PROVIDER is "gemini"' do
       before { ENV["OCR_PROVIDER"] = "gemini" }
       after  { ENV.delete("OCR_PROVIDER") }

@@ -13,7 +13,7 @@ module Api
         sign_in(resource_name, resource)
 
         render json: ApiResponseSerializer.render(
-          { user: V1::UserSerializer.render_as_hash(resource) },
+          { user: ::V1::UserSerializer.render_as_hash(resource) },
           message: "Logged in successfully."
         ), status: :ok
       end

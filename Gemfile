@@ -46,6 +46,9 @@ gem "kaminari"
 gem "ruby_llm"
 gem "ruby_llm-schema"
 
+# Messaging providers
+gem "twilio-ruby", "~> 7.0"
+
 # Authentication
 gem "devise"
 gem "devise-jwt"

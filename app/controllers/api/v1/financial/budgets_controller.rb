@@ -13,7 +13,7 @@ module Api
 
           render json: ApiResponseSerializer.render_data_array(
             budgets,
-            serializer: V1::Financial::BudgetSerializer,
+            serializer: ::V1::Financial::BudgetSerializer,
             serializer_view: :default,
             pagination: pagination_for(budgets)
           ), status: :ok
@@ -24,7 +24,7 @@ module Api
 
           render json: ApiResponseSerializer.render(
             budget,
-            serializer: V1::Financial::BudgetSerializer,
+            serializer: ::V1::Financial::BudgetSerializer,
             serializer_view: :extended
           ), status: :ok
         end
@@ -37,7 +37,7 @@ module Api
 
           render json: ApiResponseSerializer.render_data_array(
             budgets,
-            serializer: V1::Financial::BudgetSerializer,
+            serializer: ::V1::Financial::BudgetSerializer,
             serializer_view: :extended,
             metadata: { reference_date: date }
           ), status: :ok
@@ -48,7 +48,7 @@ module Api
 
           render json: ApiResponseSerializer.render(
             budget,
-            serializer: V1::Financial::BudgetSerializer,
+            serializer: ::V1::Financial::BudgetSerializer,
             serializer_view: :extended,
             message: "Budget created successfully."
           ), status: :created
@@ -60,7 +60,7 @@ module Api
 
           render json: ApiResponseSerializer.render(
             budget,
-            serializer: V1::Financial::BudgetSerializer,
+            serializer: ::V1::Financial::BudgetSerializer,
             serializer_view: :extended,
             message: "Budget updated successfully."
           ), status: :ok

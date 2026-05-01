@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-module Ocr
-  module Gemini
-    class PromptBuilder
-      # @param [Date] today
+module Llm
+  module Prompts
+    class ReceiptPromptBuilder
+      # @param [Date]
       # @return [String]
       def call(today: Date.current)
         <<~PROMPT

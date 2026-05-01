@@ -34,6 +34,24 @@ class Artifacts::ProcessOcrJob < ApplicationJob
     artifact = UseCase::Artifact::ExtractArtifactDataUseCase.new.call(artifact: artifact)
     return if artifact.needs_review?
 
-    UseCase::Artifact::CreateTransactionFromArtifactUseCase.new.call(artifact: artifact)
+    transaction = UseCase::Artifact::CreateTransactionFromArtifactUseCase.new.call(artifact: artifact)
+    notify_via_messaging(artifact, transaction)
+  end
+
+  private
+
+  def notify_via_messaging(artifact, transaction)
+    reply_to = artifact.raw_data["reply_to"]
+    return if reply_to.blank?
+
+    provider = Messaging::ProviderFactory.build
+    provider.send_message(to: reply_to, body: success_reply(transaction))
+  end
+
+  def success_reply(transaction)
+    type     = transaction.expense? ? "Despesa" : "Receita"
+    value    = format("R$%.2f", transaction.amount).gsub(".", ",")
+    category = transaction.category ? " [#{transaction.category.name}]" : ""
+    "✅ #{type} registrada: #{value}#{" - #{transaction.description}" if transaction.description.present?}#{category}"
   end
 end

@@ -3,7 +3,8 @@
 module Ocr
   module Gemini
     class ResponseParser
-      # @param [RubyLLM::Message] response
+      include Llm::ResponseParsing
+      # @param [RubyLLM::Message]
       # @param [Hash] metadata
       # @return [Ocr::Result]
       def call(response, metadata: {})
@@ -21,7 +22,7 @@ module Ocr
 
       private
 
-      # @param [String, Hash] content
+      # @param [String, Hash]
       # @return [Hash]
       def parse_payload(content)
         return content if content.is_a?(Hash)
@@ -29,34 +30,6 @@ module Ocr
         JSON.parse(content.to_s)
       rescue JSON::ParserError
         { "raw_text" => content.to_s, "confidence" => 0.0 }
-      end
-
-      # @param [Object] value
-      # @return [BigDecimal, nil]
-      def parse_decimal(value)
-        return nil if value.nil?
-
-        BigDecimal(value.to_s)
-      rescue ArgumentError
-        nil
-      end
-
-      # @param [Object] value
-      # @return [String]
-      def parse_transaction_type(value)
-        return "expense" unless value.to_s.in?(%w[expense income])
-
-        value.to_s
-      end
-
-      # @param [Object] value
-      # @return [Time, nil]
-      def parse_time(value)
-        return nil if value.blank?
-
-        Time.zone.parse(value.to_s)
-      rescue ArgumentError
-        nil
       end
     end
   end

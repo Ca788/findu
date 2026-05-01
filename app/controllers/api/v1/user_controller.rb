@@ -10,7 +10,7 @@ module Api
 
       def show
         render json: ApiResponseSerializer.render(
-          { user: V1::UserSerializer.render_as_hash(@user) }
+          { user: ::V1::UserSerializer.render_as_hash(@user) }
         ), status: :ok
       end
 
@@ -26,7 +26,7 @@ module Api
         response.set_header("Authorization", "Bearer #{result.token}")
 
         render json: ApiResponseSerializer.render(
-          { user: V1::UserSerializer.render_as_hash(result.user) },
+          { user: ::V1::UserSerializer.render_as_hash(result.user) },
           message: "User created successfully."
         ), status: :created
       end

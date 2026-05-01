@@ -23,6 +23,10 @@ Rails.application.routes.draw do
 
       resources :artifacts, only: [:index, :show, :create]
 
+      namespace :inbound do
+        resources :messages, only: [:create]
+      end
+
       namespace :financial do
         resources :categories,   only: [:index, :show, :create, :update, :destroy]
         resources :transactions, only: [:index, :show, :create, :update, :destroy]
