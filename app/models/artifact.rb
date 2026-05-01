@@ -29,7 +29,7 @@ class Artifact < ApplicationRecord
   has_one :financial_transaction, class_name: "Financial::Transaction"
   has_one_attached :file
 
-  enum status: { pending: "pending", processed: "processed", failed: "failed" }
+  enum status: { pending: "pending", processed: "processed", failed: "failed", needs_review: "needs_review" }
 
   validates :artifact_type, presence: true
 end

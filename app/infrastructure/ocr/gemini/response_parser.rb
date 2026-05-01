@@ -14,6 +14,7 @@ module Ocr
           description: data["description"],
           raw_text: data["raw_text"],
           confidence: data["confidence"],
+          transaction_type: parse_transaction_type(data["transaction_type"]),
           metadata: metadata
         )
       end
@@ -38,6 +39,14 @@ module Ocr
         BigDecimal(value.to_s)
       rescue ArgumentError
         nil
+      end
+
+      # @param [Object] value
+      # @return [String]
+      def parse_transaction_type(value)
+        return "expense" unless value.to_s.in?(%w[expense income])
+
+        value.to_s
       end
 
       # @param [Object] value

@@ -7,6 +7,7 @@ module Ocr
     :description,
     :raw_text,
     :confidence,
+    :transaction_type,
     :metadata,
     keyword_init: true
   )

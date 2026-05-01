@@ -10,6 +10,7 @@ module Ocr
           description: "Stubbed receipt",
           raw_text: "STUB OCR OUTPUT",
           confidence: 1.0,
+          transaction_type: "expense",
           metadata: { provider: "stub" }
         )
       end

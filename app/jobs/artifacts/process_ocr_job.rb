@@ -32,6 +32,8 @@ class Artifacts::ProcessOcrJob < ApplicationJob
   # @param [Artifact] artifact
   def perform(artifact)
     artifact = UseCase::Artifact::ExtractArtifactDataUseCase.new.call(artifact: artifact)
+    return if artifact.needs_review?
+
     UseCase::Artifact::CreateTransactionFromArtifactUseCase.new.call(artifact: artifact)
   end
 end

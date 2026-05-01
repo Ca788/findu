@@ -8,6 +8,7 @@ module Ocr
       string :description, description: "Vendor or merchant name plus a short description (e.g. 'Posto Shell - combustivel')"
       string :raw_text, description: "Full raw text extracted from the receipt/screenshot"
       number :confidence, description: "Self-reported confidence between 0.0 and 1.0"
+      string :transaction_type, description: "'expense' for purchases and payments, 'income' for refunds, cashbacks or received payments. Default 'expense' when unclear."
     end
   end
 end

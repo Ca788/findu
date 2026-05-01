@@ -13,7 +13,7 @@ class UseCase::Artifact::CreateTransactionFromArtifactUseCase
     UseCase::Financial::Transaction::CreateTransactionUseCase.new.call(
       user: artifact.user,
       amount: BigDecimal(data["amount"]),
-      transaction_type: :expense,
+      transaction_type: data["transaction_type"] || "expense",
       description: data["description"],
       occurred_at: artifact.occurred_at,
       artifact_id: artifact.id,

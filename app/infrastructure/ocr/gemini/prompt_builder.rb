@@ -19,7 +19,8 @@ module Ocr
             - description: vendor / merchant + short context.
             - raw_text: copy as much text as possible from the document.
             - confidence: how sure you are about the extracted data (0.0 to 1.0).
-          If a field cannot be determined, return null for that field (except raw_text and confidence).
+            - transaction_type: 'expense' for money spent; 'income' for refunds, cashbacks or received payments. Default 'expense'.
+          If a field cannot be determined, return null for that field (except raw_text, confidence and transaction_type).
         PROMPT
       end
     end
