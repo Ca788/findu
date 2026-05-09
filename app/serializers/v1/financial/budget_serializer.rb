@@ -11,7 +11,7 @@ module V1
 
       view :extended do
         include_view :default
-        fields :created_at, :updated_at
+        fields :spent_amount, :remaining, :usage_percent, :created_at, :updated_at
       end
     end
   end

@@ -23,7 +23,7 @@ RSpec.describe Artifact do
   end
 
   describe "destroy" do
-    let(:artifact) { create(:artifact, user: user) }
+    let!(:artifact) { create(:artifact, user: user) }
 
     context "when artifact has an attached file" do
       before do

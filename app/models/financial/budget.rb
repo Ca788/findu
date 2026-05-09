@@ -50,5 +50,36 @@ module Financial
 
     scope :covering, ->(date) { where("period_start <= :date AND period_end >= :date", date: date) }
     scope :for_period_type, ->(type) { where(period_type: type) if type.present? }
+
+    # @return [BigDecimal]
+    def spent_amount
+      @spent_amount ||= user.transactions
+                            .where(transaction_type: "expense")
+                            .where(occurred_at: period_range)
+                            .sum(:amount)
+    end
+
+    # @return [BigDecimal]
+    def remaining
+      (limit_amount || 0) - spent_amount
+    end
+
+    # @return [Float]
+    def usage_percent
+      return 0.0 if limit_amount.to_f.zero?
+
+      ((spent_amount.to_f / limit_amount.to_f) * 100).round(2)
+    end
+
+    def reload_usage
+      @spent_amount = nil
+      self
+    end
+
+    private
+
+    def period_range
+      period_start.beginning_of_day..period_end.end_of_day
+    end
   end
 end
