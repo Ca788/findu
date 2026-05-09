@@ -49,26 +49,23 @@ class UseCase::Messaging::ProcessInboundMessageUseCase
       return
     end
 
-    transaction = ApplicationRecord.transaction do
-      category = find_or_create_category(user, result.description)
-
-      UseCase::Financial::Transaction::CreateTransactionUseCase.new.call(
-        user:             user,
-        amount:           result.amount,
-        transaction_type: result.transaction_type,
-        description:      result.description,
-        occurred_at:      result.occurred_at || Time.current,
-        category_id:      category&.id
-      )
-    end
+    category    = find_existing_category(user, result.description)
+    transaction = UseCase::Financial::Transaction::CreateTransactionUseCase.new.call(
+      user:             user,
+      amount:           result.amount,
+      transaction_type: result.transaction_type,
+      description:      result.description,
+      occurred_at:      result.occurred_at || Time.current,
+      category_id:      category&.id
+    )
 
     @provider.send_message(to: message.reply_to, body: reply_success(transaction))
   end
 
-  def find_or_create_category(user, description)
+  def find_existing_category(user, description)
     return nil if description.blank?
 
-    user.categories.find_or_create_by!(name: description)
+    user.categories.where("LOWER(name) = ?", description.strip.downcase).first
   end
 
   def reply_user_not_found

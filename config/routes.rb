@@ -35,6 +35,8 @@ Rails.application.routes.draw do
             get :current
           end
         end
+
+        resource :summary, only: [:show], controller: "summary"
       end
     end
   end

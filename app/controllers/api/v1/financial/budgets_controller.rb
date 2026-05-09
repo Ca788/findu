@@ -30,21 +30,24 @@ module Api
         end
 
         def current
-          date = parse_date(params[:date]) || Date.current
-          budgets = @user.budgets
-                         .covering(date)
-                         .order(:period_start)
+          result = UseCase::Financial::Budget::ListCurrentBudgetsUseCase.new.call(
+            user: @user,
+            date: params[:date]
+          )
 
           render json: ApiResponseSerializer.render_data_array(
-            budgets,
+            result.budgets,
             serializer: ::V1::Financial::BudgetSerializer,
             serializer_view: :extended,
-            metadata: { reference_date: date }
+            metadata: { reference_date: result.reference_date }
           ), status: :ok
         end
 
         def create
-          budget = @user.budgets.create!(budget_params)
+          budget = UseCase::Financial::Budget::CreateBudgetUseCase.new.call(
+            user: @user,
+            attributes: budget_params.to_h
+          )
 
           render json: ApiResponseSerializer.render(
             budget,
@@ -79,13 +82,6 @@ module Api
 
         def budget_params
           params.require(:budget).permit(*::Financial::Budget::PERMITTED_ATTRIBUTES)
-        end
-
-        def parse_date(value)
-          return nil if value.blank?
-          Date.parse(value.to_s)
-        rescue ArgumentError
-          nil
         end
       end
     end

@@ -71,5 +71,50 @@ RSpec.describe UseCase::Artifact::CreateTransactionFromArtifactUseCase do
         }.to raise_error(ArgumentError, /amount is required/)
       end
     end
+
+    context "when description matches an existing category (case-insensitive)" do
+      let!(:existing_category) { create(:financial_category, user: user, name: "Supermercado XYZ") }
+      let(:artifact) do
+        create(:artifact, :processed, user: user,
+               processed_data: {
+                 "amount"      => "150.75",
+                 "description" => "  supermercado xyz  ",
+                 "raw_text"    => "x",
+                 "confidence"  => 0.95
+               })
+      end
+
+      it "links the transaction to the existing category" do
+        transaction = use_case.call(artifact: artifact)
+
+        expect(transaction.category_id).to eq(existing_category.id)
+      end
+
+      it "does not create a new category" do
+        expect {
+          use_case.call(artifact: artifact)
+        }.not_to change(Financial::Category, :count)
+      end
+    end
+
+    context "when description does not match any existing category" do
+      it "creates the transaction without a category and does not auto-create one" do
+        expect {
+          transaction = use_case.call(artifact: artifact)
+          expect(transaction.category_id).to be_nil
+        }.not_to change(Financial::Category, :count)
+      end
+    end
+
+    context "when description matches a category from another user" do
+      let(:other_user)        { create(:user) }
+      let!(:foreign_category) { create(:financial_category, user: other_user, name: "Supermercado XYZ") }
+
+      it "does not link to the foreign category" do
+        transaction = use_case.call(artifact: artifact)
+
+        expect(transaction.category_id).to be_nil
+      end
+    end
   end
 end

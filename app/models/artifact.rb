@@ -26,8 +26,8 @@
 class Artifact < ApplicationRecord
   belongs_to :user
 
-  has_one :financial_transaction, class_name: "Financial::Transaction"
-  has_one_attached :file
+  has_one :financial_transaction, class_name: "Financial::Transaction", dependent: :destroy
+  has_one_attached :file, dependent: :purge_later
 
   enum status: { pending: "pending", processed: "processed", failed: "failed", needs_review: "needs_review" }
 
