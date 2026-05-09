@@ -51,5 +51,27 @@ RSpec.describe UseCase::Financial::Category::DestroyCategoryUseCase do
         }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end
+
+    context "when category has associated transactions" do
+      before do
+        create(:financial_transaction, user: user, category: category)
+      end
+
+      it "raises ArgumentError" do
+        expect {
+          use_case.call(user: user, id: category.id)
+        }.to raise_error(ArgumentError, /associated transactions/)
+      end
+
+      it "does not destroy the category" do
+        expect {
+          begin
+            use_case.call(user: user, id: category.id)
+          rescue ArgumentError
+            nil
+          end
+        }.not_to change(Financial::Category, :count)
+      end
+    end
   end
 end

@@ -6,6 +6,11 @@ class UseCase::Financial::Category::DestroyCategoryUseCase
   # @return [Financial::Category]
   def call(user:, id:)
     category = user.categories.find(id)
+
+    if category.transactions.exists?
+      raise ArgumentError, "Cannot delete category with associated transactions"
+    end
+
     category.destroy!
     category
   end
