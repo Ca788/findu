@@ -14,7 +14,7 @@ class UseCase::Financial::Transaction::CreateTransactionUseCase
     category = resolve_category(user, category_id)
     artifact = resolve_artifact(user, artifact_id)
 
-    user.transactions.create!(
+    transaction = user.transactions.create!(
       amount: amount,
       transaction_type: transaction_type,
       description: description,
@@ -23,9 +23,23 @@ class UseCase::Financial::Transaction::CreateTransactionUseCase
       artifact: artifact,
       metadata: metadata
     )
+
+    transaction.budget_warnings = budget_warnings_for(transaction)
+    transaction
   end
 
   private
+
+  # @param [Financial::Transaction] transaction
+  # @return [Array<Hash>]
+  def budget_warnings_for(transaction)
+    return [] unless transaction.expense?
+
+    UseCase::Financial::Budget::CheckBudgetConsumptionUseCase.new.call(
+      user:        transaction.user,
+      occurred_at: transaction.occurred_at
+    )
+  end
 
   # @param [User] user
   # @param [String, nil] id

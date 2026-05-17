@@ -24,10 +24,23 @@ class UseCase::Financial::Transaction::UpdateTransactionUseCase
     attributes[:category] = resolve_category(user, category_id) unless category_id.nil?
 
     transaction.update!(attributes)
+    transaction.budget_warnings = budget_warnings_for(transaction)
     transaction
   end
 
   private
+
+  # @param [Financial::Transaction] transaction
+  # @return [Array<Hash>]
+  def budget_warnings_for(transaction)
+    return [] unless transaction.expense?
+
+    UseCase::Financial::Budget::CheckBudgetConsumptionUseCase.new.call(
+      user:        transaction.user,
+      occurred_at: transaction.occurred_at
+    )
+  end
+
 
   # @param [User] user
   # @param [String, nil] id

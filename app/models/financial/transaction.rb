@@ -46,6 +46,12 @@ module Financial
 
     enum transaction_type: { expense: "expense", income: "income" }
 
+    attr_writer :budget_warnings
+
+    def budget_warnings
+      @budget_warnings ||= []
+    end
+
     validates :amount, presence: true, numericality: { greater_than: 0 }
     validates :transaction_type, presence: true
 

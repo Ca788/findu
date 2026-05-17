@@ -11,7 +11,7 @@ module V1
 
       view :extended do
         include_view :default
-        fields :metadata, :artifact_id, :created_at, :updated_at
+        fields :metadata, :artifact_id, :created_at, :updated_at, :budget_warnings
 
         association :category, blueprint: V1::Financial::CategorySerializer, view: :default
       end

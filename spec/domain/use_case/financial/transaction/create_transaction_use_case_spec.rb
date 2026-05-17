@@ -91,5 +91,47 @@ RSpec.describe UseCase::Financial::Transaction::CreateTransactionUseCase do
         expect(transaction.category_id).to be_nil
       end
     end
+
+    context "budget warnings" do
+      it "returns an empty array when there is no covering budget" do
+        transaction = use_case.call(user: user, amount: 100, transaction_type: "expense", occurred_at: Time.current)
+
+        expect(transaction.budget_warnings).to eq([])
+      end
+
+      it "returns an empty array for income even when budget is exceeded" do
+        create(:financial_budget, user: user, limit_amount: 100)
+        create(:financial_transaction, user: user, amount: 200, transaction_type: "expense", occurred_at: Date.current)
+
+        transaction = use_case.call(user: user, amount: 500, transaction_type: "income", occurred_at: Time.current)
+
+        expect(transaction.budget_warnings).to eq([])
+      end
+
+      it "returns a warning when the new expense pushes usage above 80%" do
+        create(:financial_budget, user: user, limit_amount: 1000)
+
+        transaction = use_case.call(user: user, amount: 900, transaction_type: "expense", occurred_at: Time.current)
+
+        expect(transaction.budget_warnings.size).to eq(1)
+        expect(transaction.budget_warnings.first).to include(status: "warning", usage_percent: 90.0)
+      end
+
+      it "marks the warning as 'exceeded' when usage goes above 100%" do
+        create(:financial_budget, user: user, limit_amount: 1000)
+
+        transaction = use_case.call(user: user, amount: 1500, transaction_type: "expense", occurred_at: Time.current)
+
+        expect(transaction.budget_warnings.first).to include(status: "exceeded")
+      end
+
+      it "still persists the transaction even when the budget is exceeded (non-blocking)" do
+        create(:financial_budget, user: user, limit_amount: 100)
+
+        expect {
+          use_case.call(user: user, amount: 5000, transaction_type: "expense", occurred_at: Time.current)
+        }.to change(Financial::Transaction, :count).by(1)
+      end
+    end
   end
 end
