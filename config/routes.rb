@@ -38,6 +38,12 @@ Rails.application.routes.draw do
 
         resource :summary, only: [:show], controller: "summary"
       end
+
+      namespace :chat do
+        resources :conversations, only: [:index, :show, :create, :destroy] do
+          resources :messages, only: [:index, :show, :create]
+        end
+      end
     end
   end
 end

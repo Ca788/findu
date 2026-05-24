@@ -1,0 +1,43 @@
+# frozen_string_literal: true
+
+module Chat
+  module Replies
+    module Formatter
+      module_function
+
+      FALLBACK = 'Não entendi. Tente algo como: "gastei 50 no mercado", "orçamento mensal de 2000" ou "quanto posso gastar?".'
+
+      # @return [String]
+      def fallback
+        FALLBACK
+      end
+
+      # @param [Financial::Transaction]
+      # @return [String]
+      def transaction(transaction)
+        type        = transaction.expense? ? "Despesa" : "Receita"
+        value       = Formatters::Brl.call(transaction.amount)
+        description = transaction.description.present? ? " - #{transaction.description}" : ""
+        category    = transaction.category ? " [#{transaction.category.name}]" : ""
+        "#{type} registrada: #{value}#{description}#{category}"
+      end
+
+      # @param [Financial::Budget]
+      # @return [String]
+      def budget(budget)
+        "Orçamento criado: #{budget.period_type} de #{Formatters::Brl.call(budget.limit_amount)} " \
+          "(#{budget.period_start.strftime('%d/%m')} a #{budget.period_end.strftime('%d/%m')})."
+      end
+
+      # @param [Financial::Transaction]
+      # @param [Financial::Installment]
+      # @return [String]
+      def installment(transaction, installment)
+        total       = Formatters::Brl.call(installment.total_amount)
+        monthly     = Formatters::Brl.call(installment.monthly_amount)
+        description = transaction.description.present? ? " (#{transaction.description})" : ""
+        "Compra parcelada registrada: #{total} em #{installment.total_installments}x de #{monthly}#{description}."
+      end
+    end
+  end
+end

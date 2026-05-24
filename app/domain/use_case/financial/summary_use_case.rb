@@ -16,11 +16,11 @@ class UseCase::Financial::SummaryUseCase
   TRANSACTION_TYPES = %w[expense income].freeze
   UNCATEGORIZED_LABEL = "Uncategorized"
 
-  # @param [User] user
-  # @param [Date, String, nil] from
-  # @param [Date, String, nil] to
-  # @param [String, nil] transaction_type — "expense" | "income" | nil
-  # @param [String, nil] category_id
+  # @param [User]
+  # @param [Date, String, nil]
+  # @param [Date, String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
   # @return [Result]
   def call(user:, from: nil, to: nil, transaction_type: nil, category_id: nil)
     period_from = Support::DateParser.parse(from) || Date.current.beginning_of_month
@@ -55,15 +55,20 @@ class UseCase::Financial::SummaryUseCase
   def aggregate_by_category(scope)
     rows = scope
              .left_joins(:category)
-             .group("transactions.category_id", "categories.name")
-             .pluck(
-               Arel.sql("transactions.category_id"),
-               Arel.sql("categories.name"),
-               Arel.sql("SUM(transactions.amount)")
+             .select(
+               "transactions.category_id",
+               "COALESCE(categories.name, '#{UNCATEGORIZED_LABEL}') AS category_name",
+               "SUM(transactions.amount) AS total_amount"
              )
+             .group("transactions.category_id", "categories.name")
+             .order("total_amount DESC")
 
-    rows
-      .map { |id, name, amount| CategoryBreakdown.new(category_id: id, category_name: name || UNCATEGORIZED_LABEL, amount: amount) }
-      .sort_by { |row| -row.amount.to_f }
+    rows.map do |row|
+      CategoryBreakdown.new(
+        category_id: row.category_id,
+        category_name: row.category_name,
+        amount: row.total_amount
+      )
+    end
   end
 end

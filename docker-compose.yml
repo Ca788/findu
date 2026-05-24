@@ -30,6 +30,7 @@ services:
       - db
       - redis
       - maildev
+    env_file: .env
     environment:
       RAILS_ENV: development
       POSTGRES_USER: postgres
@@ -54,6 +55,7 @@ services:
       - db
       - redis
       - maildev
+    env_file: .env
     environment:
       RAILS_ENV: development
       POSTGRES_USER: postgres
