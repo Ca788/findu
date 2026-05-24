@@ -37,6 +37,8 @@ class User < ApplicationRecord
   has_many :transactions, class_name: "Financial::Transaction", dependent: :destroy
   has_many :budgets, class_name: "Financial::Budget", dependent: :destroy
   has_many :insights, class_name: "Intelligence::Insight", dependent: :destroy
+  has_many :chat_conversations, class_name: "Chat::Conversation", dependent: :destroy
+  has_many :chat_messages, class_name: "Chat::Message", dependent: :destroy
 
   validates :name, presence: true
 end

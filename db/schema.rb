@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_04_28_011903) do
+ActiveRecord::Schema[7.0].define(version: 2026_05_24_195721) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -80,6 +80,39 @@ ActiveRecord::Schema[7.0].define(version: 2026_04_28_011903) do
     t.index ["user_id"], name: "index_categories_on_user_id"
   end
 
+  create_table "chat_conversations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "title"
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_chat_conversations_on_user_id"
+  end
+
+  create_table "chat_messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "conversation_id", null: false
+    t.uuid "user_id", null: false
+    t.uuid "parent_message_id"
+    t.string "role", null: false
+    t.string "kind", default: "text", null: false
+    t.text "body"
+    t.string "status", default: "pending", null: false
+    t.string "intent"
+    t.jsonb "payload", default: {}
+    t.jsonb "error"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "client_message_id"
+    t.datetime "deleted_at"
+    t.index ["conversation_id"], name: "index_chat_messages_on_conversation_id"
+    t.index ["deleted_at"], name: "index_chat_messages_on_deleted_at"
+    t.index ["parent_message_id"], name: "index_chat_messages_on_parent_message_id"
+    t.index ["role"], name: "index_chat_messages_on_role"
+    t.index ["status"], name: "index_chat_messages_on_status"
+    t.index ["user_id", "client_message_id"], name: "index_chat_messages_on_user_and_client_message_id", unique: true, where: "(client_message_id IS NOT NULL)"
+    t.index ["user_id"], name: "index_chat_messages_on_user_id"
+  end
+
   create_table "insights", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id", null: false
     t.string "reference_type", null: false
@@ -143,6 +176,10 @@ ActiveRecord::Schema[7.0].define(version: 2026_04_28_011903) do
   add_foreign_key "artifacts", "users"
   add_foreign_key "budgets", "users"
   add_foreign_key "categories", "users"
+  add_foreign_key "chat_conversations", "users"
+  add_foreign_key "chat_messages", "chat_conversations", column: "conversation_id"
+  add_foreign_key "chat_messages", "chat_messages", column: "parent_message_id"
+  add_foreign_key "chat_messages", "users"
   add_foreign_key "insights", "users"
   add_foreign_key "installments", "transactions"
   add_foreign_key "transactions", "artifacts"

@@ -16,6 +16,10 @@ module Llm
             - transaction_type: 'expense' if money was spent, 'income' if received. Default 'expense'.
             - description: what was bought or received.
             - occurred_at: date mentioned or null if not specified.
+            - category: nome da categoria, curto e em minúsculas.
+                * Se o usuário citar EXPLICITAMENTE ("categoria X", "categoria de X", "em X", "na conta de X"), use EXATAMENTE o nome que ele disse (ex: "categoria Uber" -> "uber"; "categoria farmácia" -> "farmácia"). Não substitua por sinônimo.
+                * Se NÃO houver menção explícita mas o estabelecimento/contexto deixar a categoria óbvia, infira uma simples (ex: "comprei no iFood" -> "alimentação"; "paguei o Netflix" -> "assinaturas"; "fui no mercado" -> "mercado").
+                * Retorne null quando não houver categoria clara nem mencionada.
             - confidence: 1.0 if all fields are clear, lower if you had to infer.
           Return null for fields you cannot determine.
         PROMPT

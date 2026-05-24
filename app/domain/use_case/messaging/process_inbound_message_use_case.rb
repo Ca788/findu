@@ -5,9 +5,16 @@ class UseCase::Messaging::ProcessInboundMessageUseCase
 
   # @param [Messaging::Provider]
   # @param [UseCase::Messaging::ExtractTransactionFromMessageUseCase]
-  def initialize(provider:, extractor: UseCase::Messaging::ExtractTransactionFromMessageUseCase.new)
-    @provider  = provider
-    @extractor = extractor
+  # @param [UseCase::Financial::Transaction::CreateTransactionUseCase]
+  # @param [UseCase::Financial::Category::FindOrCreateByNameUseCase]
+  def initialize(provider:,
+                 extractor: UseCase::Messaging::ExtractTransactionFromMessageUseCase.new,
+                 transaction_creator: UseCase::Financial::Transaction::CreateTransactionUseCase.new,
+                 category_finder: UseCase::Financial::Category::FindOrCreateByNameUseCase.new)
+    @provider            = provider
+    @extractor           = extractor
+    @transaction_creator = transaction_creator
+    @category_finder     = category_finder
   end
 
   # @param [Messaging::Message]
@@ -49,8 +56,8 @@ class UseCase::Messaging::ProcessInboundMessageUseCase
       return
     end
 
-    category    = find_existing_category(user, result.description)
-    transaction = UseCase::Financial::Transaction::CreateTransactionUseCase.new.call(
+    category    = @category_finder.call(user: user, name: result.description)
+    transaction = @transaction_creator.call(
       user:             user,
       amount:           result.amount,
       transaction_type: result.transaction_type,
@@ -59,13 +66,7 @@ class UseCase::Messaging::ProcessInboundMessageUseCase
       category_id:      category&.id
     )
 
-    @provider.send_message(to: message.reply_to, body: reply_success(transaction))
-  end
-
-  def find_existing_category(user, description)
-    return nil if description.blank?
-
-    user.categories.where("LOWER(name) = ?", description.strip.downcase).first
+    @provider.send_message(to: message.reply_to, body: Chat::Replies::Formatter.transaction(transaction))
   end
 
   def reply_user_not_found
@@ -73,17 +74,10 @@ class UseCase::Messaging::ProcessInboundMessageUseCase
   end
 
   def reply_parse_error
-    "Não entendi. Tente: \"gastei R$50 no mercado\" ou \"recebi R$200 de salário\"."
+    'Não entendi. Tente: "gastei R$50 no mercado" ou "recebi R$200 de salário".'
   end
 
   def reply_image_received
     "Recibo recebido! Estou processando... te aviso quando estiver pronto."
-  end
-
-  def reply_success(transaction)
-    type     = transaction.expense? ? "Despesa" : "Receita"
-    value    = format("R$%.2f", transaction.amount).gsub(".", ",")
-    category = transaction.category ? " [#{transaction.category.name}]" : ""
-    "#{type} registrada: #{value}#{" - #{transaction.description}" if transaction.description.present?}#{category}"
   end
 end
