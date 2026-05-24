@@ -24,13 +24,8 @@ class UseCase::Financial::Budget::CheckBudgetConsumptionUseCase
   def resolve_date(value)
     return Date.current if value.blank?
 
-    case value
-    when Date     then value
-    when Time, DateTime then value.to_date
-    else
-      Time.zone.parse(value.to_s).to_date
-    end
-  rescue ArgumentError, TypeError
+    value.to_date
+  rescue NoMethodError, Date::Error, ArgumentError, TypeError
     Date.current
   end
 
