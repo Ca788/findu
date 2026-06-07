@@ -31,10 +31,36 @@ module Api
         ), status: :created
       end
 
+      def update
+        updated = UseCase::User::UpdateUserProfileUseCase.new.call(
+          user: @user,
+          attributes: update_profile_params.to_h,
+          avatar: update_avatar_param,
+          remove_avatar: update_remove_avatar_param
+        )
+
+        render json: ApiResponseSerializer.render(
+          { user: ::V1::UserSerializer.render_as_hash(updated) },
+          message: "Profile updated successfully."
+        ), status: :ok
+      end
+
       private
 
       def user_params
         params.require(:user).permit(:name, :email, :phone, :password, :password_confirmation)
+      end
+
+      def update_profile_params
+        params.require(:user).permit(:name, :phone)
+      end
+
+      def update_avatar_param
+        params.dig(:user, :avatar)
+      end
+
+      def update_remove_avatar_param
+        params.dig(:user, :remove_avatar)
       end
     end
   end

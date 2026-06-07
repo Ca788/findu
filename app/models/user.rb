@@ -26,6 +26,9 @@
 class User < ApplicationRecord
   include Devise::JWT::RevocationStrategies::JTIMatcher
 
+  AVATAR_ALLOWED_TYPES = %w[image/png image/jpeg image/webp].freeze
+  AVATAR_MAX_SIZE = 5.megabytes
+
   devise :database_authenticatable,
          :recoverable,
          :validatable,
@@ -40,5 +43,22 @@ class User < ApplicationRecord
   has_many :chat_conversations, class_name: "Chat::Conversation", dependent: :destroy
   has_many :chat_messages, class_name: "Chat::Message", dependent: :destroy
 
+  has_one_attached :avatar, dependent: :purge_later
+
   validates :name, presence: true
+  validate :avatar_format_and_size
+
+  private
+
+  def avatar_format_and_size
+    return unless avatar.attached?
+
+    unless AVATAR_ALLOWED_TYPES.include?(avatar.blob.content_type)
+      errors.add(:avatar, "must be PNG, JPEG or WEBP")
+    end
+
+    if avatar.blob.byte_size > AVATAR_MAX_SIZE
+      errors.add(:avatar, "must be smaller than 5MB")
+    end
+  end
 end
