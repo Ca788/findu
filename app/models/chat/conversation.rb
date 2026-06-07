@@ -38,5 +38,17 @@ module Chat
     def archive!
       update!(archived_at: Time.current)
     end
+
+    # Broadcasts a message snapshot to subscribers of this conversation channel.
+    # @param [Chat::Message] message
+    # @return [void]
+    def broadcast_message!(message)
+      payload = ::V1::Chat::MessageSerializer.render_as_hash(message, view: :extended)
+      Chat::ConversationChannel.broadcast_to(
+        self,
+        type:    "message.upserted",
+        message: payload
+      )
+    end
   end
 end

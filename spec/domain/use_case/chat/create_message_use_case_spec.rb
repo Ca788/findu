@@ -31,11 +31,11 @@ RSpec.describe UseCase::Chat::CreateMessageUseCase do
       end
     end
 
-    context "when body and audio are both blank" do
+    context "when body, audio and attachments are all blank" do
       it "raises ArgumentError" do
         expect {
-          use_case.call(conversation: conversation, user: user, body: nil, audio: nil)
-        }.to raise_error(ArgumentError, /body or audio/)
+          use_case.call(conversation: conversation, user: user, body: nil, audio: nil, attachments: [])
+        }.to raise_error(ArgumentError, /body, audio or attachments/)
       end
     end
   end

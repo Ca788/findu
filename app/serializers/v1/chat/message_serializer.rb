@@ -20,6 +20,20 @@ module V1
 
           Rails.application.routes.url_helpers.rails_blob_path(message.audio, only_path: true)
         end
+
+        field :attachments do |message|
+          next [] unless message.attachments.attached?
+
+          message.attachments.map do |att|
+            {
+              id:           att.id,
+              filename:     att.filename.to_s,
+              content_type: att.content_type,
+              byte_size:    att.byte_size,
+              url:          Rails.application.routes.url_helpers.rails_blob_path(att, only_path: true)
+            }
+          end
+        end
       end
     end
   end

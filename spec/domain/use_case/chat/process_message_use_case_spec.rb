@@ -7,7 +7,8 @@ RSpec.describe UseCase::Chat::ProcessMessageUseCase do
     described_class.new(
       classifier:            classifier,
       transcriber:           transcriber,
-      transaction_extractor: transaction_extractor
+      transaction_extractor: transaction_extractor,
+      answerer:              answerer
     )
   end
 
@@ -17,6 +18,15 @@ RSpec.describe UseCase::Chat::ProcessMessageUseCase do
   let(:classifier)   { instance_double(UseCase::Chat::ClassifyIntentUseCase) }
   let(:transcriber)  { instance_double(UseCase::Chat::TranscribeMessageUseCase) }
   let(:transaction_extractor) { instance_double(UseCase::Messaging::ExtractTransactionFromMessageUseCase) }
+  let(:answerer) { instance_double(UseCase::Chat::AnswerConversationallyUseCase) }
+
+  let(:assistant_reply) do
+    build_stubbed(:chat_message, conversation: conversation, user: user, role: "assistant", status: "completed", body: "ok!")
+  end
+
+  before do
+    allow(answerer).to receive(:call).and_return(assistant_reply)
+  end
 
   describe "#call" do
     context "when intent is create_transaction with valid extraction" do
@@ -48,16 +58,11 @@ RSpec.describe UseCase::Chat::ProcessMessageUseCase do
         expect(message.payload["transaction_id"]).to be_present
       end
 
-      it "creates an assistant reply linked to the user message" do
-        reply = use_case.call(message: message)
+      it "delegates the assistant reply to the answerer with side_facts" do
+        use_case.call(message: message)
 
-        expect(reply).to be_persisted
-        expect(reply).to have_attributes(
-          role:              "assistant",
-          status:            "completed",
-          intent:            "create_transaction",
-          parent_message_id: message.id,
-          conversation_id:   conversation.id
+        expect(answerer).to have_received(:call).with(
+          hash_including(user_message: message, side_facts: array_including(a_string_matching(/registrei despesa/)))
         )
       end
     end
@@ -78,6 +83,12 @@ RSpec.describe UseCase::Chat::ProcessMessageUseCase do
       it "does not create any transaction" do
         expect { use_case.call(message: message) }.not_to change(Financial::Transaction, :count)
       end
+
+      it "delegates the assistant reply to the answerer with empty side_facts" do
+        use_case.call(message: message)
+
+        expect(answerer).to have_received(:call).with(hash_including(user_message: message, side_facts: []))
+      end
     end
 
     context "when classifier returns unknown" do
@@ -87,11 +98,10 @@ RSpec.describe UseCase::Chat::ProcessMessageUseCase do
         )
       end
 
-      it "creates a fallback assistant reply" do
-        reply = use_case.call(message: message)
+      it "delegates the assistant reply to the answerer without side_facts" do
+        use_case.call(message: message)
 
-        expect(reply.intent).to eq("unknown")
-        expect(reply.body).to include("Não entendi")
+        expect(answerer).to have_received(:call).with(hash_including(user_message: message, side_facts: []))
       end
     end
 

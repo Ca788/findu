@@ -37,6 +37,7 @@ module Api
             user:              @user,
             body:              message_params[:body],
             audio:             message_params[:audio],
+            attachments:       Array(message_params[:attachments]),
             client_message_id: message_params[:client_message_id]
           )
 
@@ -55,7 +56,7 @@ module Api
         end
 
         def message_params
-          params.permit(:body, :audio, :client_message_id)
+          params.permit(:body, :audio, :client_message_id, attachments: [])
         end
       end
     end

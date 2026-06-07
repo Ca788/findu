@@ -49,14 +49,31 @@ module Chat
              dependent: :nullify
 
     has_one_attached :audio, dependent: :purge_later
+    has_many_attached :attachments, dependent: :purge_later
+
+    ACCEPTED_ATTACHMENT_TYPES = %w[
+      image/jpeg image/jpg image/png image/webp image/heic image/heif
+      application/pdf
+    ].freeze
+    MAX_ATTACHMENT_SIZE_MB = 15
+    MAX_ATTACHMENTS_PER_MESSAGE = 5
 
     enum role:   { user: "user", assistant: "assistant", system: "system" }, _prefix: :role
     enum kind:   { text: "text", audio: "audio" }, _prefix: :kind
     enum status: { pending: "pending", processing: "processing", completed: "completed", failed: "failed" }
 
     validates :role, :kind, :status, presence: true
+    validate :acceptable_attachments
 
     scope :not_deleted, -> { where(deleted_at: nil) }
+
+    def image_attachments
+      attachments.select { |att| att.content_type.to_s.start_with?("image/") }
+    end
+
+    def document_attachments
+      attachments.reject { |att| att.content_type.to_s.start_with?("image/") }
+    end
 
     def soft_delete!
       update!(deleted_at: Time.current)
@@ -64,6 +81,25 @@ module Chat
 
     def deleted?
       deleted_at.present?
+    end
+
+    private
+
+    def acceptable_attachments
+      return unless attachments.attached?
+
+      if attachments.size > MAX_ATTACHMENTS_PER_MESSAGE
+        errors.add(:attachments, "no máximo #{MAX_ATTACHMENTS_PER_MESSAGE} arquivos por mensagem")
+        return
+      end
+
+      max_bytes = MAX_ATTACHMENT_SIZE_MB.megabytes
+      attachments.each do |att|
+        unless ACCEPTED_ATTACHMENT_TYPES.include?(att.content_type.to_s)
+          errors.add(:attachments, "tipo não suportado: #{att.content_type}")
+        end
+        errors.add(:attachments, "cada arquivo deve ter no máximo #{MAX_ATTACHMENT_SIZE_MB}MB") if att.byte_size > max_bytes
+      end
     end
   end
 end

@@ -75,6 +75,6 @@ Rails.application.configure do
   # Allow ngrok tunnels for local webhook testing.
   config.hosts << /.*\.ngrok-free\.app/
 
-  # Uncomment if you wish to allow Action Cable access from any origin.
-  # config.action_cable.disable_request_forgery_protection = true
+  # Allow Action Cable access from the local Next.js dev server (different origin).
+  config.action_cable.disable_request_forgery_protection = true
 end
