@@ -5,15 +5,14 @@ class UseCase::Chat::ClassifyIntentUseCase
 
   Result = Struct.new(:intent, :confidence, keyword_init: true)
 
-  DEFAULT_MODEL   = "gemini-2.5-flash"
   FALLBACK_INTENT = "unknown"
   FALLBACK_PAYLOAD = { "intent" => FALLBACK_INTENT, "confidence" => 0.0 }.freeze
 
-  # @param [String] model
+  # @param [Array<String>]
   # @param [Llm::Prompts::ChatIntentPromptBuilder]
-  def initialize(model: ENV.fetch("CHAT_INTENT_MODEL", DEFAULT_MODEL),
+  def initialize(models: Llm::Models.chain("CHAT_INTENT_MODEL"),
                  prompt_builder: Llm::Prompts::ChatIntentPromptBuilder.new)
-    @model          = model
+    @models         = models
     @prompt_builder = prompt_builder
   end
 
@@ -25,7 +24,7 @@ class UseCase::Chat::ClassifyIntentUseCase
     data = llm_extract(
       text:           text,
       schema:         Llm::Schemas::ChatIntentSchema,
-      model:          @model,
+      models:         @models,
       prompt_builder: @prompt_builder,
       fallback:       FALLBACK_PAYLOAD
     )

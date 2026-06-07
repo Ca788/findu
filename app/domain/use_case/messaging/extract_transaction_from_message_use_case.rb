@@ -5,13 +5,11 @@ class UseCase::Messaging::ExtractTransactionFromMessageUseCase
 
   Result = Struct.new(:amount, :transaction_type, :description, :occurred_at, :category, :confidence, keyword_init: true)
 
-  DEFAULT_MODEL = "gemini-2.5-flash"
-
-  # @param [String]
+  # @param [Array<String>]
   # @param [Llm::Prompts::TransactionPromptBuilder]
-  def initialize(model: ENV.fetch("MESSAGING_LLM_MODEL", DEFAULT_MODEL),
+  def initialize(models: Llm::Models.chain("MESSAGING_LLM_MODEL"),
                  prompt_builder: Llm::Prompts::TransactionPromptBuilder.new)
-    @model          = model
+    @models         = models
     @prompt_builder = prompt_builder
   end
 
@@ -25,7 +23,7 @@ class UseCase::Messaging::ExtractTransactionFromMessageUseCase
     data = llm_extract(
       text:           raw,
       schema:         Llm::Schemas::TransactionSchema,
-      model:          @model,
+      models:         @models,
       prompt_builder: @prompt_builder
     )
 

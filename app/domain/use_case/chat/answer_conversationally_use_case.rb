@@ -1,27 +1,28 @@
 # frozen_string_literal: true
 
 class UseCase::Chat::AnswerConversationallyUseCase
-  DEFAULT_MODEL          = "gemini-2.5-flash"
+  class StreamAlreadyStartedError < StandardError; end
+
   HISTORY_LIMIT          = 20
   STREAM_FLUSH_SECONDS   = 0.08
   FALLBACK_BODY          = "Desculpe, tive um problema agora. Pode repetir?"
   RATE_LIMIT_BODY        = "Atingi o limite de requisições do modelo de IA agora. " \
                            "Tente de novo em alguns segundos — ou aumente a cota do Gemini."
 
-  # @param [UseCase::Chat::BuildUserContextUseCase] context_builder
-  # @param [Llm::Prompts::ChatAgentPromptBuilder] prompt_builder
-  # @param [String] model
+  # @param [UseCase::Chat::BuildUserContextUseCase]
+  # @param [Llm::Prompts::ChatAgentPromptBuilder]
+  # @param [Array<String>]
   def initialize(context_builder: UseCase::Chat::BuildUserContextUseCase.new,
                  prompt_builder: Llm::Prompts::ChatAgentPromptBuilder.new,
-                 model: ENV.fetch("CHAT_AGENT_MODEL", DEFAULT_MODEL))
+                 models: Llm::Models.chain("CHAT_AGENT_MODEL"))
     @context_builder = context_builder
     @prompt_builder  = prompt_builder
-    @model           = model
+    @models          = models
   end
 
-  # @param [Chat::Message] user_message
-  # @param [Array<String>] side_facts  facts to inject in the system prompt
-  # @return [Chat::Message]  the assistant reply
+  # @param [Chat::Message]
+  # @param [Array<String>]
+  # @return [Chat::Message]
   def call(user_message:, side_facts: [])
     user  = user_message.user
     reply = build_streaming_reply(user_message)
@@ -30,16 +31,14 @@ class UseCase::Chat::AnswerConversationallyUseCase
     system_text = @prompt_builder.call(context: context, side_facts: side_facts)
     history     = history_messages(user_message)
 
-    chat = RubyLLM.chat(model: @model)
-                  .with_instructions(system_text)
-                  .with_tools(*build_tools(user))
-    history.each { |m| chat.add_message(role: m.role.to_sym, content: m.body.to_s) }
-
-    final_body = stream_response(chat: chat, user_message: user_message, reply: reply)
+    final_body = Llm::ModelFallback.with_fallback(@models) do |model|
+      chat = build_chat(model: model, system_text: system_text, history: history, user: user)
+      stream_response(chat: chat, user_message: user_message, reply: reply)
+    end
 
     finalize_reply(reply, body: final_body)
     reply
-  rescue RubyLLM::RateLimitError => e
+  rescue RubyLLM::RateLimitError, StreamAlreadyStartedError => e
     Rails.logger.warn("[AnswerConversationallyUseCase] rate limit: #{e.message}")
     finalize_reply(reply, body: RATE_LIMIT_BODY) if reply
     reply
@@ -50,6 +49,14 @@ class UseCase::Chat::AnswerConversationallyUseCase
   end
 
   private
+
+  def build_chat(model:, system_text:, history:, user:)
+    chat = Llm::GeminiChat.for(model)
+                          .with_instructions(system_text)
+                          .with_tools(*build_tools(user))
+    history.each { |m| chat.add_message(role: m.role.to_sym, content: m.body.to_s) }
+    chat
+  end
 
   def build_tools(user)
     [
@@ -99,6 +106,10 @@ class UseCase::Chat::AnswerConversationallyUseCase
     end
 
     buffer.presence || FALLBACK_BODY
+  rescue RubyLLM::RateLimitError
+    raise if flushed_upto.zero?
+
+    raise StreamAlreadyStartedError
   end
 
   def flush_delta!(reply, buffer, flushed_upto)

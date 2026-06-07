@@ -3,8 +3,6 @@
 module Ocr
   module Gemini
     class Provider
-      DEFAULT_MODEL = "gemini-2.5-flash"
-
       STRATEGIES = {
         "receipt" => { schema: Llm::Schemas::ReceiptSchema,
                        prompt_builder: Llm::Prompts::ReceiptPromptBuilder.new }
@@ -35,16 +33,19 @@ module Ocr
       # @return [Ocr::Result]
       def extract(image)
         path = @image_resolver.call(image)
-        chat = RubyLLM.chat(model: model_name).with_schema(@schema)
-        response = chat.ask(@prompt_builder.call, with: path)
-        @response_parser.call(response, metadata: { provider: "gemini", model: model_name })
+        used_model = nil
+        response = Llm::ModelFallback.with_fallback(models) do |model|
+          used_model = model
+          Llm::GeminiChat.for(model).with_schema(@schema).ask(@prompt_builder.call, with: path)
+        end
+        @response_parser.call(response, metadata: { provider: "gemini", model: used_model })
       end
 
       private
 
-      # @return [String]
-      def model_name
-        ENV.fetch("GEMINI_OCR_MODEL", DEFAULT_MODEL)
+      # @return [Array<String>]
+      def models
+        Llm::Models.chain("GEMINI_OCR_MODEL")
       end
     end
   end

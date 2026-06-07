@@ -5,15 +5,13 @@ class UseCase::Chat::ExtractCategoryUseCase
 
   Result = Struct.new(:category, :confidence, keyword_init: true)
 
-  DEFAULT_MODEL = "gemini-2.5-flash"
-
-  # @param [String]
+  # @param [Array<String>]
   # @param [Llm::Prompts::CategoryPromptBuilder]
   # @param [UseCase::Financial::Category::FindOrCreateByNameUseCase]
-  def initialize(model: ENV.fetch("CHAT_CATEGORY_MODEL", DEFAULT_MODEL),
+  def initialize(models: Llm::Models.chain("CHAT_CATEGORY_MODEL"),
                  prompt_builder: Llm::Prompts::CategoryPromptBuilder.new,
                  category_finder: UseCase::Financial::Category::FindOrCreateByNameUseCase.new)
-    @model           = model
+    @models          = models
     @prompt_builder  = prompt_builder
     @category_finder = category_finder
   end
@@ -25,7 +23,7 @@ class UseCase::Chat::ExtractCategoryUseCase
     data = llm_extract(
       text:           text,
       schema:         Llm::Schemas::CategorySchema,
-      model:          @model,
+      models:         @models,
       prompt_builder: @prompt_builder
     )
 

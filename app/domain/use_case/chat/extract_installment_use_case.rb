@@ -5,13 +5,11 @@ class UseCase::Chat::ExtractInstallmentUseCase
 
   Result = Struct.new(:transaction, :installment, :confidence, keyword_init: true)
 
-  DEFAULT_MODEL = "gemini-2.5-flash"
-
-  # @param [String]
+  # @param [Array<String>]
   # @param [Llm::Prompts::InstallmentPromptBuilder]
-  def initialize(model: ENV.fetch("CHAT_INSTALLMENT_MODEL", DEFAULT_MODEL),
+  def initialize(models: Llm::Models.chain("CHAT_INSTALLMENT_MODEL"),
                  prompt_builder: Llm::Prompts::InstallmentPromptBuilder.new)
-    @model          = model
+    @models         = models
     @prompt_builder = prompt_builder
   end
 
@@ -22,7 +20,7 @@ class UseCase::Chat::ExtractInstallmentUseCase
     data = llm_extract(
       text:           text,
       schema:         Llm::Schemas::InstallmentSchema,
-      model:          @model,
+      models:         @models,
       prompt_builder: @prompt_builder
     )
 

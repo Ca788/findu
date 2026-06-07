@@ -4,8 +4,6 @@ module Chat
   module Transcription
     module Gemini
       class Provider
-        DEFAULT_MODEL = "gemini-2.5-flash"
-
         # @param [Class]
         # @param [Llm::Prompts::AudioTranscriptionPromptBuilder]
         # @param [Chat::Transcription::Gemini::AudioResolver]
@@ -21,21 +19,25 @@ module Chat
         # @return [Chat::Transcription::Result]
         def transcribe(audio)
           path = @audio_resolver.call(audio)
-          chat = RubyLLM.chat(model: model_name).with_schema(@schema)
-          response = chat.ask(@prompt_builder.call, with: path)
-          parse(response)
+          used_model = nil
+          response = Llm::ModelFallback.with_fallback(models) do |model|
+            used_model = model
+            Llm::GeminiChat.for(model).with_schema(@schema).ask(@prompt_builder.call, with: path)
+          end
+          parse(response, model: used_model)
         end
 
         private
 
         # @param [RubyLLM::Message]
+        # @param [String]
         # @return [Chat::Transcription::Result]
-        def parse(response)
+        def parse(response, model:)
           data = parse_payload(response.content)
           Chat::Transcription::Result.new(
             transcript: data["transcript"].to_s,
             confidence: data["confidence"].to_f,
-            metadata:   { provider: "gemini", model: model_name }
+            metadata:   { provider: "gemini", model: model }
           )
         end
 
@@ -47,8 +49,8 @@ module Chat
           { "transcript" => content.to_s, "confidence" => 0.0 }
         end
 
-        def model_name
-          ENV.fetch("GEMINI_AUDIO_MODEL", DEFAULT_MODEL)
+        def models
+          Llm::Models.chain("GEMINI_AUDIO_MODEL")
         end
       end
     end

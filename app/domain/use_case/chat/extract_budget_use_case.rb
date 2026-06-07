@@ -5,13 +5,11 @@ class UseCase::Chat::ExtractBudgetUseCase
 
   Result = Struct.new(:budget, :confidence, keyword_init: true)
 
-  DEFAULT_MODEL = "gemini-2.5-flash"
-
-  # @param [String]
+  # @param [Array<String>]
   # @param [Llm::Prompts::BudgetPromptBuilder]
-  def initialize(model: ENV.fetch("CHAT_BUDGET_MODEL", DEFAULT_MODEL),
+  def initialize(models: Llm::Models.chain("CHAT_BUDGET_MODEL"),
                  prompt_builder: Llm::Prompts::BudgetPromptBuilder.new)
-    @model          = model
+    @models         = models
     @prompt_builder = prompt_builder
   end
 
@@ -22,7 +20,7 @@ class UseCase::Chat::ExtractBudgetUseCase
     data = llm_extract(
       text:           text,
       schema:         Llm::Schemas::BudgetSchema,
-      model:          @model,
+      models:         @models,
       prompt_builder: @prompt_builder
     )
 

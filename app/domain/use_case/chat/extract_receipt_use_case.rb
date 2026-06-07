@@ -8,13 +8,12 @@ class UseCase::Chat::ExtractReceiptUseCase
     keyword_init: true
   )
 
-  DEFAULT_MODEL = "gemini-2.5-flash"
   FALLBACK_PAYLOAD = { "confidence" => 0.0, "transaction_type" => "expense" }.freeze
 
-  def initialize(model: ENV.fetch("CHAT_RECEIPT_MODEL", DEFAULT_MODEL),
+  def initialize(models: Llm::Models.chain("CHAT_RECEIPT_MODEL"),
                  prompt_builder: Llm::Prompts::ReceiptPromptBuilder.new,
                  schema: Llm::Schemas::ReceiptSchema)
-    @model          = model
+    @models         = models
     @prompt_builder = prompt_builder
     @schema         = schema
   end
@@ -37,8 +36,9 @@ class UseCase::Chat::ExtractReceiptUseCase
     path = local_path_for(attachment)
     return nil if path.nil?
 
-    chat = RubyLLM.chat(model: @model).with_schema(@schema)
-    response = chat.ask(@prompt_builder.call, with: path)
+    response = Llm::ModelFallback.with_fallback(@models) do |model|
+      Llm::GeminiChat.for(model).with_schema(@schema).ask(@prompt_builder.call, with: path)
+    end
     build_receipt(parse_payload(response.content, fallback: FALLBACK_PAYLOAD))
   rescue StandardError => e
     Rails.logger.warn("[ExtractReceiptUseCase] failed for #{attachment.filename}: #{e.class}: #{e.message}")
