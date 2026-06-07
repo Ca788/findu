@@ -28,6 +28,8 @@ module Findu
     # Use Sidekiq as the ActiveJob backend
     config.active_job.queue_adapter = :sidekiq
 
+    config.action_cable.worker_pool_size = ENV.fetch("ACTION_CABLE_WORKER_POOL_SIZE", 4).to_i
+
     # Use UUID as default primary key
     config.generators do |g|
       g.orm :active_record, primary_key_type: :uuid

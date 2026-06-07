@@ -43,6 +43,7 @@ module Chat
     # @param [Chat::Message] message
     # @return [void]
     def broadcast_message!(message)
+      preload_attachments(message)
       payload = ::V1::Chat::MessageSerializer.render_as_hash(message, view: :extended)
       Chat::ConversationChannel.broadcast_to(
         self,
@@ -51,7 +52,7 @@ module Chat
       )
     end
 
-    # Broadcasts a message snapshot to subscribers of this conversation channel.
+    # Broadcasts an incremental text chunk for an in-flight message.
     # @param [String] message_id
     # @param [String] delta  the newly produced text since the last broadcast
     # @return [void]
@@ -61,6 +62,17 @@ module Chat
         type:    "message.delta",
         message: { id: message_id, delta: delta }
       )
+    end
+
+    private
+
+    # @param [Chat::Message] message
+    # @return [void]
+    def preload_attachments(message)
+      ActiveRecord::Associations::Preloader.new(
+        records:      [message],
+        associations: [{ audio_attachment: :blob }, { attachments_attachments: :blob }]
+      ).call
     end
   end
 end

@@ -1,0 +1,43 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+RSpec.describe UseCase::Chat::BuildUserContextUseCase do
+  subject(:use_case) do
+    described_class.new(summary_use_case: summary_use_case, budgets_use_case: budgets_use_case)
+  end
+
+  let(:user)            { create(:user) }
+  let(:budgets_result)  { Struct.new(:budgets).new([]) }
+  let(:summary_use_case) { instance_double(UseCase::Financial::SummaryUseCase, call: :summary) }
+  let(:budgets_use_case) do
+    instance_double(UseCase::Financial::Budget::ListCurrentBudgetsUseCase, call: budgets_result)
+  end
+
+  before do
+    allow(Rails).to receive(:cache).and_return(ActiveSupport::Cache::MemoryStore.new)
+  end
+
+  describe "#call" do
+    it "builds the context for the user" do
+      context = use_case.call(user: user)
+
+      expect(context).to have_attributes(summary: :summary, budgets: [], reference_date: Date.current)
+    end
+
+    it "reuses the cached context while financial data is unchanged" do
+      use_case.call(user: user)
+      use_case.call(user: user)
+
+      expect(summary_use_case).to have_received(:call).once
+    end
+
+    it "recomputes when the user's financial data changes" do
+      use_case.call(user: user)
+      create(:financial_transaction, user: user)
+      use_case.call(user: user)
+
+      expect(summary_use_case).to have_received(:call).twice
+    end
+  end
+end
