@@ -50,5 +50,17 @@ module Chat
         message: payload
       )
     end
+
+    # Broadcasts a message snapshot to subscribers of this conversation channel.
+    # @param [String] message_id
+    # @param [String] delta  the newly produced text since the last broadcast
+    # @return [void]
+    def broadcast_delta!(message_id, delta)
+      Chat::ConversationChannel.broadcast_to(
+        self,
+        type:    "message.delta",
+        message: { id: message_id, delta: delta }
+      )
+    end
   end
 end

@@ -3,9 +3,10 @@
 class UseCase::Chat::AnswerConversationallyUseCase
   DEFAULT_MODEL          = "gemini-2.5-flash"
   HISTORY_LIMIT          = 20
-  STREAM_FLUSH_CHARS     = 80
-  STREAM_FLUSH_SECONDS   = 0.4
+  STREAM_FLUSH_SECONDS   = 0.08
   FALLBACK_BODY          = "Desculpe, tive um problema agora. Pode repetir?"
+  RATE_LIMIT_BODY        = "Atingi o limite de requisições do modelo de IA agora. " \
+                           "Tente de novo em alguns segundos — ou aumente a cota do Gemini."
 
   # @param [UseCase::Chat::BuildUserContextUseCase] context_builder
   # @param [Llm::Prompts::ChatAgentPromptBuilder] prompt_builder
@@ -22,19 +23,25 @@ class UseCase::Chat::AnswerConversationallyUseCase
   # @param [Array<String>] side_facts  facts to inject in the system prompt
   # @return [Chat::Message]  the assistant reply
   def call(user_message:, side_facts: [])
-    user = user_message.user
+    user  = user_message.user
     reply = build_streaming_reply(user_message)
 
     context     = @context_builder.call(user: user)
     system_text = @prompt_builder.call(context: context, side_facts: side_facts)
     history     = history_messages(user_message)
 
-    chat = RubyLLM.chat(model: @model).with_instructions(system_text)
+    chat = RubyLLM.chat(model: @model)
+                  .with_instructions(system_text)
+                  .with_tools(*build_tools(user))
     history.each { |m| chat.add_message(role: m.role.to_sym, content: m.body.to_s) }
 
     final_body = stream_response(chat: chat, user_message: user_message, reply: reply)
 
     finalize_reply(reply, body: final_body)
+    reply
+  rescue RubyLLM::RateLimitError => e
+    Rails.logger.warn("[AnswerConversationallyUseCase] rate limit: #{e.message}")
+    finalize_reply(reply, body: RATE_LIMIT_BODY) if reply
     reply
   rescue StandardError => e
     Rails.logger.error("[AnswerConversationallyUseCase] #{e.class}: #{e.message}")
@@ -43,6 +50,14 @@ class UseCase::Chat::AnswerConversationallyUseCase
   end
 
   private
+
+  def build_tools(user)
+    [
+      Llm::Tools::RegisterTransactionTool.new(user: user),
+      Llm::Tools::RegisterBudgetTool.new(user: user),
+      Llm::Tools::RegisterCategoryTool.new(user: user)
+    ]
+  end
 
   def build_streaming_reply(user_message)
     reply = user_message.conversation.messages.create!(
@@ -69,31 +84,28 @@ class UseCase::Chat::AnswerConversationallyUseCase
 
   def stream_response(chat:, user_message:, reply:)
     buffer        = +""
-    last_flushed  = +""
+    flushed_upto  = 0
     last_flush_at = Time.current
     attachment_paths = resolve_attachment_paths(user_message)
 
     chat.ask(user_message.body.to_s, with: attachment_paths) do |chunk|
       buffer << chunk.content.to_s
       now = Time.current
-      next unless should_flush?(buffer, last_flushed, last_flush_at, now)
+      next unless (now - last_flush_at) >= STREAM_FLUSH_SECONDS
 
-      flush!(reply, buffer)
-      last_flushed  = buffer.dup
+      flush_delta!(reply, buffer, flushed_upto)
+      flushed_upto  = buffer.length
       last_flush_at = now
     end
 
     buffer.presence || FALLBACK_BODY
   end
 
-  def should_flush?(buffer, last_flushed, last_flush_at, now)
-    return true if (buffer.length - last_flushed.length) >= STREAM_FLUSH_CHARS
-    (now - last_flush_at) >= STREAM_FLUSH_SECONDS && buffer != last_flushed
-  end
+  def flush_delta!(reply, buffer, flushed_upto)
+    delta = buffer[flushed_upto..]
+    return if delta.blank?
 
-  def flush!(reply, body)
-    reply.update_columns(body: body, updated_at: Time.current)
-    reply.conversation.broadcast_message!(reply)
+    reply.conversation.broadcast_delta!(reply.id, delta)
   end
 
   def finalize_reply(reply, body:, error: nil)
