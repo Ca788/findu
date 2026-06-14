@@ -62,7 +62,15 @@ class UseCase::Chat::AnswerConversationallyUseCase
     [
       Llm::Tools::RegisterTransactionTool.new(user: user),
       Llm::Tools::RegisterBudgetTool.new(user: user),
-      Llm::Tools::RegisterCategoryTool.new(user: user)
+      Llm::Tools::RegisterCategoryTool.new(user: user),
+      Llm::Tools::ListTransactionsTool.new(user: user),
+      Llm::Tools::ListCategoriesTool.new(user: user),
+      Llm::Tools::ListBudgetsTool.new(user: user),
+      Llm::Tools::UpdateTransactionTool.new(user: user),
+      Llm::Tools::DestroyTransactionTool.new(user: user),
+      Llm::Tools::DestroyTransactionsBatchTool.new(user: user),
+      Llm::Tools::UpdateCategoryTool.new(user: user),
+      Llm::Tools::DestroyCategoryTool.new(user: user)
     ]
   end
 

@@ -2,7 +2,7 @@
 
 module Llm
   module Tools
-    class RegisterTransactionTool < RubyLLM::Tool
+    class RegisterTransactionTool < BaseTool
       description "Registra uma despesa (expense) ou receita (income) do usuário. " \
                   "Use sempre que ele mencionar um gasto, pagamento, compra, recebimento ou similar com valor."
 
@@ -22,38 +22,28 @@ module Llm
       end
 
       def execute(amount:, transaction_type:, description: nil, category_name: nil, occurred_at: nil)
-        category = @category_finder.call(user: @user, name: (category_name || description).to_s.strip.presence)
-        type     = %w[expense income].include?(transaction_type.to_s) ? transaction_type.to_s : "expense"
+        safe_execute do
+          category = @category_finder.call(user: @user, name: (category_name || description).to_s.strip.presence)
+          type     = whitelist(transaction_type, allowed: TRANSACTION_TYPES, default: "expense")
 
-        transaction = @creator.call(
-          user:             @user,
-          amount:           amount,
-          transaction_type: type,
-          description:      description,
-          occurred_at:      parsed_time(occurred_at) || Time.current,
-          category_id:      category&.id
-        )
+          transaction = @creator.call(
+            user:             @user,
+            amount:           amount,
+            transaction_type: type,
+            description:      description,
+            occurred_at:      parse_time(occurred_at) || Time.current,
+            category_id:      category&.id
+          )
 
-        {
-          success:        true,
-          transaction_id: transaction.id,
-          amount:         transaction.amount.to_s,
-          type:           type,
-          description:    transaction.description,
-          category:       category&.name
-        }
-      rescue StandardError => e
-        { success: false, error: e.message }
-      end
-
-      private
-
-      def parsed_time(value)
-        return nil if value.blank?
-
-        Time.zone.parse(value.to_s)
-      rescue ArgumentError
-        nil
+          {
+            success:        true,
+            transaction_id: transaction.id,
+            amount:         transaction.amount.to_s,
+            type:           type,
+            description:    transaction.description,
+            category:       category&.name
+          }
+        end
       end
     end
   end

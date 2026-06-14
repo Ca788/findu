@@ -62,11 +62,30 @@ module Api
         end
 
         def destroy
-          @user.transactions.find(params[:id]).destroy!
+          UseCase::Financial::Transaction::DestroyTransactionUseCase.new.call(
+            user: @user,
+            id:   params[:id]
+          )
 
           render json: ApiResponseSerializer.render(
             {},
             message: "Transaction deleted successfully."
+          ), status: :ok
+        end
+
+        def batch_destroy
+          result = UseCase::Financial::Transaction::DestroyTransactionsBatchUseCase.new.call(
+            user: @user,
+            ids:  batch_destroy_ids
+          )
+
+          render json: ApiResponseSerializer.render(
+            {},
+            message: "#{result.destroyed_ids.size} transaction(s) deleted.",
+            metadata: {
+              destroyed_ids: result.destroyed_ids,
+              missing_ids:   result.missing_ids
+            }
           ), status: :ok
         end
 
@@ -77,6 +96,11 @@ module Api
             *(::Financial::Transaction::PERMITTED_ATTRIBUTES - [:metadata]),
             metadata: {}
           )
+        end
+
+        def batch_destroy_ids
+          raw = params[:ids].presence || params.dig(:transaction, :ids)
+          Array(raw)
         end
       end
     end
