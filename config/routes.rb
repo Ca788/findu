@@ -44,7 +44,8 @@ Rails.application.routes.draw do
       end
 
       namespace :chat do
-        resources :conversations, only: [:index, :show, :create, :destroy] do
+        resources :agents, only: [:index]
+        resources :conversations, only: [:index, :show, :create, :update, :destroy] do
           resources :messages, only: [:index, :show, :create]
         end
       end

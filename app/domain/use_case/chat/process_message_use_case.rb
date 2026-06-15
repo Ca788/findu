@@ -40,7 +40,10 @@ class UseCase::Chat::ProcessMessageUseCase
 
     finalize_user_message(message, payload: payload)
 
-    selection = @agent_selector.call(text: message.body)
+    selection = @agent_selector.call(
+      text:         message.body,
+      forced_agent: message.conversation.agent_id
+    )
     @answerer.call(
       user_message: message,
       side_facts:   receipt_side_effects.map(&:fact),

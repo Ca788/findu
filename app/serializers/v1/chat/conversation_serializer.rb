@@ -6,7 +6,7 @@ module V1
       identifier :id
 
       view :default do
-        fields :title, :archived_at, :created_at, :updated_at
+        fields :title, :archived_at, :agent_id, :created_at, :updated_at
       end
 
       view :extended do

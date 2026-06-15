@@ -30,7 +30,7 @@ module Api
         end
 
         def create
-          conversation = @user.chat_conversations.create!(title: conversation_params[:title])
+          conversation = @user.chat_conversations.create!(conversation_params.to_h.symbolize_keys)
 
           render json: ApiResponseSerializer.render(
             conversation,
@@ -38,6 +38,18 @@ module Api
             serializer_view: :default,
             message:         "Conversation created."
           ), status: :created
+        end
+
+        def update
+          conversation = @user.chat_conversations.find(params[:id])
+          conversation.update!(conversation_params.to_h.symbolize_keys)
+
+          render json: ApiResponseSerializer.render(
+            conversation,
+            serializer:      ::V1::Chat::ConversationSerializer,
+            serializer_view: :default,
+            message:         "Conversation updated."
+          ), status: :ok
         end
 
         def destroy
@@ -53,7 +65,7 @@ module Api
         private
 
         def conversation_params
-          params.permit(:title)
+          params.permit(*::Chat::Conversation::PERMITTED_ATTRIBUTES)
         end
       end
     end
