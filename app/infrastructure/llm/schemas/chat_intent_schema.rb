@@ -10,11 +10,12 @@ module Llm
         create_installment
         query_balance
         query_budget
+        delete_transaction
         unknown
       ].freeze
 
       string :intent,
-             description: "The user's intent. One of: create_transaction (registering a single expense/income), create_budget (setting a spending limit for a period), create_category (creating a new category), create_installment (parcelamento of a purchase), query_balance (asking about totals/summary), query_budget (asking how much can still be spent), unknown (none of the above).",
+             description: "The user's intent. One of: create_transaction (registering a single expense/income), create_budget (setting a spending limit for a period), create_category (creating a new category), create_installment (parcelamento of a purchase), query_balance (asking about totals/summary), query_budget (asking how much can still be spent), delete_transaction (deleting one or many existing transactions, cleaning up history, removing duplicates), unknown (none of the above).",
              enum: INTENTS
       number :confidence, description: "How sure you are (0.0 to 1.0)."
     end

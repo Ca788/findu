@@ -33,6 +33,15 @@ module Llm
                 Exemplos: "quanto gastei esse mês?", "qual meu resumo?", "total de receitas".
             - query_budget: perguntar quanto ainda pode gastar do orçamento.
                 Exemplos: "quanto posso gastar?", "ainda tenho quanto no orçamento?".
+            - delete_transaction: pedir para apagar/remover/excluir uma ou várias transações,
+                limpar histórico, remover duplicatas. Pode citar "apaga", "exclui", "remove",
+                "limpa", "deleta".
+                Exemplos:
+                  * "apaga aquele gasto de 50 no mercado"
+                  * "remove a transação de ontem"
+                  * "limpa as duplicadas de uber"
+                  * "exclui todas as transações de teste"
+                  * "deleta o lançamento errado de 200"
             - unknown: nada acima se aplica.
 
           Mensagem do usuário: "#{text}"

@@ -51,12 +51,14 @@ module Llm
             relacionando com o contexto financeiro do usuário quando fizer sentido.
       PERSONA
 
-      # @param [UseCase::Chat::BuildUserContextUseCase::Context] context
-      # @param [Array<String>] side_facts
+      # @param [UseCase::Chat::BuildUserContextUseCase::Context]
+      # @param [Array<String>]
+      # @param [Llm::Agents::Agent, nil]
       # @return [String]
-      def call(context:, side_facts: [])
+      def call(context:, side_facts: [], agent: nil)
         sections = [
           PERSONA,
+          agent_section(agent),
           "DATA DE HOJE: #{context.reference_date.iso8601}",
           summary_section(context.summary),
           budgets_section(context.budgets),
@@ -68,6 +70,12 @@ module Llm
       end
 
       private
+
+      def agent_section(agent)
+        return nil if agent.nil? || agent.persona_extension.blank?
+
+        "PERFIL ATIVO — #{agent.name.upcase}:\n#{agent.persona_extension.strip}"
+      end
 
       def summary_section(summary)
         income  = summary.by_type["income"]  || 0

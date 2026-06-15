@@ -5,21 +5,24 @@ class UseCase::Chat::ProcessMessageUseCase
 
   SideEffect = Struct.new(:payload, :fact, keyword_init: true)
 
-  # @param [UseCase::Chat::TranscribeMessageUseCase] transcriber
-  # @param [UseCase::Chat::ExtractReceiptUseCase] receipt_extractor
-  # @param [UseCase::Financial::Transaction::CreateTransactionUseCase] transaction_creator
-  # @param [UseCase::Financial::Category::FindOrCreateByNameUseCase] category_finder
-  # @param [UseCase::Chat::AnswerConversationallyUseCase] answerer
+  # @param [UseCase::Chat::TranscribeMessageUseCase]
+  # @param [UseCase::Chat::ExtractReceiptUseCase]
+  # @param [UseCase::Financial::Transaction::CreateTransactionUseCase]
+  # @param [UseCase::Financial::Category::FindOrCreateByNameUseCase]
+  # @param [UseCase::Chat::AnswerConversationallyUseCase]
+  # @param [UseCase::Chat::SelectAgentUseCase]
   def initialize(transcriber: UseCase::Chat::TranscribeMessageUseCase.new,
                  receipt_extractor: UseCase::Chat::ExtractReceiptUseCase.new,
                  transaction_creator: UseCase::Financial::Transaction::CreateTransactionUseCase.new,
                  category_finder: UseCase::Financial::Category::FindOrCreateByNameUseCase.new,
-                 answerer: UseCase::Chat::AnswerConversationallyUseCase.new)
+                 answerer: UseCase::Chat::AnswerConversationallyUseCase.new,
+                 agent_selector: UseCase::Chat::SelectAgentUseCase.new)
     @transcriber         = transcriber
     @receipt_extractor   = receipt_extractor
     @transaction_creator = transaction_creator
     @category_finder     = category_finder
     @answerer            = answerer
+    @agent_selector      = agent_selector
   end
 
   # @param [Chat::Message] message
@@ -37,7 +40,12 @@ class UseCase::Chat::ProcessMessageUseCase
 
     finalize_user_message(message, payload: payload)
 
-    @answerer.call(user_message: message, side_facts: receipt_side_effects.map(&:fact))
+    selection = @agent_selector.call(text: message.body)
+    @answerer.call(
+      user_message: message,
+      side_facts:   receipt_side_effects.map(&:fact),
+      agent:        selection.agent
+    )
   rescue StandardError => e
     message.update!(
       status: "failed",

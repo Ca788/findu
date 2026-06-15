@@ -22,17 +22,19 @@ class UseCase::Chat::AnswerConversationallyUseCase
 
   # @param [Chat::Message]
   # @param [Array<String>]
+  # @param [Llm::Agents::Agent, nil]
   # @return [Chat::Message]
-  def call(user_message:, side_facts: [])
-    user  = user_message.user
-    reply = build_streaming_reply(user_message)
+  def call(user_message:, side_facts: [], agent: nil)
+    user           = user_message.user
+    selected_agent = agent || Llm::Agents::Registry::DEFAULT
+    reply          = build_streaming_reply(user_message)
 
     context     = @context_builder.call(user: user)
-    system_text = @prompt_builder.call(context: context, side_facts: side_facts)
+    system_text = @prompt_builder.call(context: context, side_facts: side_facts, agent: selected_agent)
     history     = history_messages(user_message)
 
     final_body = Llm::ModelFallback.with_fallback(@models) do |model|
-      chat = build_chat(model: model, system_text: system_text, history: history, user: user)
+      chat = build_chat(model: model, system_text: system_text, history: history, user: user, agent: selected_agent)
       stream_response(chat: chat, user_message: user_message, reply: reply)
     end
 
@@ -50,28 +52,12 @@ class UseCase::Chat::AnswerConversationallyUseCase
 
   private
 
-  def build_chat(model:, system_text:, history:, user:)
+  def build_chat(model:, system_text:, history:, user:, agent:)
     chat = Llm::GeminiChat.for(model)
                           .with_instructions(system_text)
-                          .with_tools(*build_tools(user))
+                          .with_tools(*agent.build_tools(user))
     history.each { |m| chat.add_message(role: m.role.to_sym, content: m.body.to_s) }
     chat
-  end
-
-  def build_tools(user)
-    [
-      Llm::Tools::RegisterTransactionTool.new(user: user),
-      Llm::Tools::RegisterBudgetTool.new(user: user),
-      Llm::Tools::RegisterCategoryTool.new(user: user),
-      Llm::Tools::ListTransactionsTool.new(user: user),
-      Llm::Tools::ListCategoriesTool.new(user: user),
-      Llm::Tools::ListBudgetsTool.new(user: user),
-      Llm::Tools::UpdateTransactionTool.new(user: user),
-      Llm::Tools::DestroyTransactionTool.new(user: user),
-      Llm::Tools::DestroyTransactionsBatchTool.new(user: user),
-      Llm::Tools::UpdateCategoryTool.new(user: user),
-      Llm::Tools::DestroyCategoryTool.new(user: user)
-    ]
   end
 
   def build_streaming_reply(user_message)
