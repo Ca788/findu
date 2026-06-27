@@ -33,6 +33,9 @@ gem "bootsnap", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
 
+# S3-compatible storage adapter (used for Cloudflare R2 and Supabase Storage)
+gem "aws-sdk-s3", require: false
+
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 gem "rack-cors"
 
@@ -55,6 +58,10 @@ gem "devise-jwt"
 
 # Sidekiq for background jobs
 gem "sidekiq", "~> 7.0"
+
+# Pinned to avoid breaking Sidekiq 7.3.x (connection_pool 3.x changed `pop` signature
+# and crashes the Sidekiq scheduler on boot). Remove when upgrading to Sidekiq 8.x.
+gem "connection_pool", "~> 2.4"
 
 # Environment variables
 gem "dotenv-rails", groups: [:development, :test]

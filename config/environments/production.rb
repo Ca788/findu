@@ -33,10 +33,13 @@ Rails.application.configure do
   # Store uploaded files on the configured storage service (see config/storage.yml).
   config.active_storage.service = ENV.fetch("STORAGE_SERVICE", "local").to_sym
 
-  # Mount Action Cable outside main process or domain.
-  # config.action_cable.mount_path = nil
-  # config.action_cable.url = "wss://example.com/cable"
-  # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
+  # Action Cable
+  config.action_cable.allowed_request_origins = ENV
+    .fetch("FRONTEND_ORIGIN", "")
+    .split(",")
+    .map(&:strip)
+    .reject(&:empty?)
+    .then { |origins| origins + [%r{\Ahttps://[a-z0-9\-]+\.vercel\.app\z}] }
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   # config.force_ssl = true
