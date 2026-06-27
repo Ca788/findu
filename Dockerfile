@@ -1,7 +1,6 @@
 FROM ruby:3.3.5-slim
 
 ENV RAILS_ENV=production \
-    BUNDLE_WITHOUT="development:test" \
     PORT=8080
 
 RUN apt-get update -qq && \
