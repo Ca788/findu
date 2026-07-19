@@ -85,9 +85,10 @@ class UseCase::Financial::Statements::ShowMonthlyStatementUseCase
     user.installment_plans
         .where(status: "active")
         .where("first_competency <= ?", reference)
-        .where(<<~SQL.squish, reference: reference)
-          first_competency + ((total_installments - 1) || ' months')::interval >= :reference
-        SQL
+        .where(
+          "first_competency + ((total_installments - 1) * INTERVAL '1 month') >= ?",
+          reference
+        )
         .to_a
   end
 

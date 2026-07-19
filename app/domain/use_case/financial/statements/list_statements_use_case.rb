@@ -51,7 +51,13 @@ class UseCase::Financial::Statements::ListStatementsUseCase
     rows = user.transactions
                .in_competency_range(from, to)
                .group(:competency_month, :transaction_type, :status)
-               .pluck(:competency_month, :transaction_type, :status, "SUM(amount)", "COUNT(*)")
+               .pluck(
+                 :competency_month,
+                 :transaction_type,
+                 :status,
+                 Arel.sql("SUM(amount)"),
+                 Arel.sql("COUNT(*)")
+               )
 
     accumulator = Hash.new { |h, k| h[k] = empty_row }
 
