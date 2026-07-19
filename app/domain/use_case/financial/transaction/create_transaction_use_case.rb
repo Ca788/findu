@@ -6,22 +6,29 @@ class UseCase::Financial::Transaction::CreateTransactionUseCase
   # @param [String] transaction_type
   # @param [String, nil] description
   # @param [DateTime, String, nil] occurred_at
+  # @param [Date, String, nil] competency_month accepts "YYYY-MM" ou Date; defaults to current month
+  # @param [String, nil] status "pending" (default) ou "paid"
   # @param [String, nil] category_id
   # @param [String, nil] artifact_id
   # @param [Hash, nil] metadata
   # @return [Financial::Transaction]
-  def call(user:, amount:, transaction_type:, description: nil, occurred_at: nil, category_id: nil, artifact_id: nil, metadata: nil)
+  def call(user:, amount:, transaction_type:,
+           description: nil, occurred_at: nil,
+           competency_month: nil, status: "pending",
+           category_id: nil, artifact_id: nil, metadata: nil)
     category = resolve_category(user, category_id)
     artifact = resolve_artifact(user, artifact_id)
 
     transaction = user.transactions.create!(
-      amount: amount,
+      amount:           amount,
       transaction_type: transaction_type,
-      description: description,
-      occurred_at: occurred_at,
-      category: category,
-      artifact: artifact,
-      metadata: metadata
+      description:      description,
+      occurred_at:      occurred_at,
+      competency_month: resolve_competency(competency_month, occurred_at),
+      status:           status.presence || "pending",
+      category:         category,
+      artifact:         artifact,
+      metadata:         metadata
     )
 
     transaction.budget_warnings = budget_warnings_for(transaction)
@@ -30,29 +37,27 @@ class UseCase::Financial::Transaction::CreateTransactionUseCase
 
   private
 
-  # @param [Financial::Transaction] transaction
-  # @return [Array<Hash>]
+  # @return [Date]
+  def resolve_competency(explicit, occurred_at)
+    parsed = Support::DateParser.parse(explicit) || Support::DateParser.parse(occurred_at)
+    (parsed || Date.current).beginning_of_month
+  end
+
   def budget_warnings_for(transaction)
     return [] unless transaction.expense?
 
     UseCase::Financial::Budget::CheckBudgetConsumptionUseCase.new.call(
       user:        transaction.user,
-      occurred_at: transaction.occurred_at
+      occurred_at: transaction.occurred_at || transaction.competency_month
     )
   end
 
-  # @param [User] user
-  # @param [String, nil] id
-  # @return [Financial::Category, nil]
   def resolve_category(user, id)
     return nil if id.blank?
 
     user.categories.find(id)
   end
 
-  # @param [User] user
-  # @param [String, nil] id
-  # @return [Artifact, nil]
   def resolve_artifact(user, id)
     return nil if id.blank?
 

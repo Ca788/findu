@@ -7,6 +7,18 @@ FactoryBot.define do
     transaction_type { %w[expense income].sample }
     description      { Faker::Commerce.product_name }
     occurred_at      { Time.current }
+    competency_month { Date.current.beginning_of_month }
+    status           { "paid" }
+
+    trait :pending do
+      status { "pending" }
+      paid_at { nil }
+    end
+
+    trait :paid do
+      status { "paid" }
+      paid_at { Time.current }
+    end
 
     trait :expense do
       transaction_type { "expense" }

@@ -29,14 +29,13 @@ module Chat
           "(#{budget.period_start.strftime('%d/%m')} a #{budget.period_end.strftime('%d/%m')})."
       end
 
-      # @param [Financial::Transaction]
-      # @param [Financial::Installment]
+      # @param [Financial::InstallmentPlan]
       # @return [String]
-      def installment(transaction, installment)
-        total       = Formatters::Brl.call(installment.total_amount)
-        monthly     = Formatters::Brl.call(installment.monthly_amount)
-        description = transaction.description.present? ? " (#{transaction.description})" : ""
-        "Compra parcelada registrada: #{total} em #{installment.total_installments}x de #{monthly}#{description}."
+      def installment_plan(plan)
+        total       = Formatters::Brl.call(plan.total_amount_derived)
+        monthly     = Formatters::Brl.call(plan.monthly_amount)
+        description = plan.description.present? ? " (#{plan.description})" : ""
+        "Compra parcelada registrada: #{total} em #{plan.total_installments}x de #{monthly}#{description}."
       end
     end
   end

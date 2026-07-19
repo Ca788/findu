@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_06_14_200000) do
+ActiveRecord::Schema[7.0].define(version: 2026_07_19_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -128,8 +128,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_06_14_200000) do
     t.index ["user_id"], name: "index_insights_on_user_id"
   end
 
-  create_table "installments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "transaction_id", null: false
+  create_table "installment_plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.decimal "total_amount", precision: 10, scale: 2
     t.integer "total_installments"
     t.integer "current_installment"
@@ -137,7 +136,35 @@ ActiveRecord::Schema[7.0].define(version: 2026_06_14_200000) do
     t.datetime "started_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["transaction_id"], name: "index_installments_on_transaction_id"
+    t.uuid "user_id"
+    t.uuid "category_id"
+    t.string "description"
+    t.string "transaction_type", default: "expense", null: false
+    t.date "first_competency"
+    t.string "status", default: "active", null: false
+    t.datetime "canceled_at"
+    t.index ["category_id"], name: "index_installment_plans_on_category_id"
+    t.index ["user_id", "status"], name: "index_installment_plans_on_user_id_and_status"
+    t.index ["user_id"], name: "index_installment_plans_on_user_id"
+  end
+
+  create_table "recurrence_rules", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.uuid "category_id"
+    t.string "transaction_type", null: false
+    t.decimal "amount", precision: 10, scale: 2, null: false
+    t.string "description"
+    t.string "frequency", default: "monthly", null: false
+    t.integer "day_of_month"
+    t.date "starts_on", null: false
+    t.date "ends_on"
+    t.boolean "active", default: true, null: false
+    t.datetime "canceled_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_recurrence_rules_on_category_id"
+    t.index ["user_id", "active"], name: "index_recurrence_rules_on_user_id_and_active"
+    t.index ["user_id"], name: "index_recurrence_rules_on_user_id"
   end
 
   create_table "transactions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -151,8 +178,18 @@ ActiveRecord::Schema[7.0].define(version: 2026_06_14_200000) do
     t.jsonb "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "competency_month", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "paid_at"
+    t.integer "installment_number"
+    t.uuid "recurrence_rule_id"
+    t.uuid "installment_plan_id"
     t.index ["artifact_id"], name: "index_transactions_on_artifact_id"
     t.index ["category_id"], name: "index_transactions_on_category_id"
+    t.index ["installment_plan_id"], name: "index_transactions_on_installment_plan_id"
+    t.index ["recurrence_rule_id"], name: "index_transactions_on_recurrence_rule_id"
+    t.index ["user_id", "competency_month"], name: "index_transactions_on_user_id_and_competency_month"
+    t.index ["user_id", "status"], name: "index_transactions_on_user_id_and_status"
     t.index ["user_id"], name: "index_transactions_on_user_id"
   end
 
@@ -183,8 +220,13 @@ ActiveRecord::Schema[7.0].define(version: 2026_06_14_200000) do
   add_foreign_key "chat_messages", "chat_messages", column: "parent_message_id"
   add_foreign_key "chat_messages", "users"
   add_foreign_key "insights", "users"
-  add_foreign_key "installments", "transactions"
+  add_foreign_key "installment_plans", "categories"
+  add_foreign_key "installment_plans", "users"
+  add_foreign_key "recurrence_rules", "categories"
+  add_foreign_key "recurrence_rules", "users"
   add_foreign_key "transactions", "artifacts"
   add_foreign_key "transactions", "categories"
+  add_foreign_key "transactions", "installment_plans"
+  add_foreign_key "transactions", "recurrence_rules"
   add_foreign_key "transactions", "users"
 end

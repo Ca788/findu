@@ -3,12 +3,12 @@
 class UseCase::Chat::AnswerQueryUseCase
   Result = Struct.new(:body, :payload, keyword_init: true)
 
-  # @param [UseCase::Financial::SummaryUseCase]
+  # @param [UseCase::Financial::Statements::ShowMonthlyStatementUseCase]
   # @param [UseCase::Financial::Budget::ListCurrentBudgetsUseCase]
-  def initialize(summary_use_case: UseCase::Financial::SummaryUseCase.new,
-                 budgets_use_case: UseCase::Financial::Budget::ListCurrentBudgetsUseCase.new)
-    @summary_use_case = summary_use_case
-    @budgets_use_case = budgets_use_case
+  def initialize(statement_use_case: UseCase::Financial::Statements::ShowMonthlyStatementUseCase.new,
+                 budgets_use_case:   UseCase::Financial::Budget::ListCurrentBudgetsUseCase.new)
+    @statement_use_case = statement_use_case
+    @budgets_use_case   = budgets_use_case
   end
 
   # @param [User]
@@ -26,24 +26,27 @@ class UseCase::Chat::AnswerQueryUseCase
   private
 
   def balance_reply(user)
-    summary = @summary_use_case.call(user: user)
+    statement = @statement_use_case.call(user: user)
 
-    income  = summary.by_type["income"] || 0
-    expense = summary.by_type["expense"] || 0
-    net     = income - expense
+    forecast = statement.forecast
+    actual   = statement.actual
 
-    body = "Resumo de #{summary.from.strftime('%d/%m')} a #{summary.to.strftime('%d/%m')}: " \
-           "receitas #{Formatters::Brl.call(income)}, despesas #{Formatters::Brl.call(expense)}, " \
-           "saldo #{Formatters::Brl.call(net)} (#{summary.transaction_count} transações)."
+    body = "Extrato de #{statement.month}: " \
+           "receitas previstas #{Formatters::Brl.call(forecast[:income])} " \
+           "(pagas #{Formatters::Brl.call(actual[:income_paid])}), " \
+           "despesas previstas #{Formatters::Brl.call(forecast[:expense])} " \
+           "(pagas #{Formatters::Brl.call(actual[:expense_paid])}), " \
+           "saldo previsto #{Formatters::Brl.call(forecast[:balance])} " \
+           "(realizado #{Formatters::Brl.call(actual[:balance])}). " \
+           "#{statement.counts[:pending]} pendente(s), #{statement.counts[:paid]} paga(s)."
 
     Result.new(
       body: body,
       payload: {
-        from:              summary.from,
-        to:                summary.to,
-        total_amount:      summary.total_amount,
-        transaction_count: summary.transaction_count,
-        by_type:           summary.by_type
+        month:    statement.month,
+        forecast: forecast,
+        actual:   actual,
+        counts:   statement.counts
       }
     )
   end

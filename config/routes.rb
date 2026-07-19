@@ -28,19 +28,30 @@ Rails.application.routes.draw do
       end
 
       namespace :financial do
-        resources :categories,   only: [:index, :show, :create, :update, :destroy]
-        resources :transactions, only: [:index, :show, :create, :update, :destroy] do
-          collection do
-            delete :batch, action: :batch_destroy
-          end
-        end
-        resources :budgets,      only: [:index, :show, :create, :update, :destroy] do
+        resources :categories, only: [:index, :show, :create, :update, :destroy]
+
+        resources :budgets, only: [:index, :show, :create, :update, :destroy] do
           collection do
             get :current
           end
         end
 
-        resource :summary, only: [:show], controller: "summary"
+        resources :recurrence_rules,  only: [:index, :show, :create, :update, :destroy]
+        resources :installment_plans, only: [:index, :show, :create, :update, :destroy]
+
+        resources :statements,
+                  only:   [:index, :show],
+                  param:  :month,
+                  constraints: { month: /\d{4}-\d{2}/ } do
+          resources :entries,
+                    controller: "statements/entries",
+                    only:       [:create, :update, :destroy] do
+            member do
+              post :mark_paid
+              post :mark_pending
+            end
+          end
+        end
       end
 
       namespace :chat do

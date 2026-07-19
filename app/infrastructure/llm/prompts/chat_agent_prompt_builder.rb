@@ -60,7 +60,7 @@ module Llm
           PERSONA,
           agent_section(agent),
           "DATA DE HOJE: #{context.reference_date.iso8601}",
-          summary_section(context.summary),
+          statement_section(context.statement),
           budgets_section(context.budgets),
           transactions_section(context.recent_transactions),
           side_facts_section(side_facts)
@@ -77,17 +77,19 @@ module Llm
         "PERFIL ATIVO — #{agent.name.upcase}:\n#{agent.persona_extension.strip}"
       end
 
-      def summary_section(summary)
-        income  = summary.by_type["income"]  || 0
-        expense = summary.by_type["expense"] || 0
-        net     = income - expense
+      def statement_section(statement)
+        forecast = statement.forecast
+        actual   = statement.actual
+        counts   = statement.counts
 
         <<~SECTION.strip
-          RESUMO DO PERÍODO (#{summary.from.strftime('%d/%m')} a #{summary.to.strftime('%d/%m')}):
-            - Receitas: #{Formatters::Brl.call(income)}
-            - Despesas: #{Formatters::Brl.call(expense)}
-            - Saldo:    #{Formatters::Brl.call(net)}
-            - Transações: #{summary.transaction_count}
+          EXTRATO DE #{statement.month}:
+            - Receitas previstas: #{Formatters::Brl.call(forecast[:income])} (pagas #{Formatters::Brl.call(actual[:income_paid])})
+            - Despesas previstas: #{Formatters::Brl.call(forecast[:expense])} (pagas #{Formatters::Brl.call(actual[:expense_paid])})
+            - Saldo previsto: #{Formatters::Brl.call(forecast[:balance])} (realizado #{Formatters::Brl.call(actual[:balance])})
+            - Lançamentos: #{counts[:total]} (pendentes #{counts[:pending]}, pagos #{counts[:paid]})
+            - Parcelamentos ativos no mês: #{statement.installments_active.size}
+            - Recorrências ativas no mês: #{statement.recurrences_active.size}
         SECTION
       end
 
@@ -103,16 +105,17 @@ module Llm
       end
 
       def transactions_section(transactions)
-        return "ÚLTIMAS TRANSAÇÕES: nenhuma transação registrada ainda." if transactions.blank?
+        return "LANÇAMENTOS DO EXTRATO ATUAL: nenhum lançamento registrado ainda." if transactions.blank?
 
         lines = transactions.map do |t|
           type     = t.expense? ? "despesa" : "receita"
           category = t.category&.name || "sem categoria"
           desc     = t.description.present? ? " — #{t.description}" : ""
-          "- #{t.occurred_at.strftime('%d/%m')} · #{type} de #{Formatters::Brl.call(t.amount)} [#{category}]#{desc}"
+          status   = t.status == "paid" ? "pago" : "pendente"
+          "- #{t.competency_month.strftime('%m/%Y')} · #{type} de #{Formatters::Brl.call(t.amount)} [#{category}] · #{status}#{desc}"
         end
 
-        "ÚLTIMAS TRANSAÇÕES (até #{transactions.size}):\n#{lines.join("\n")}"
+        "LANÇAMENTOS DO EXTRATO ATUAL (até #{transactions.size}):\n#{lines.join("\n")}"
       end
 
       def side_facts_section(side_facts)

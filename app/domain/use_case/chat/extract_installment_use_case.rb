@@ -3,7 +3,7 @@
 class UseCase::Chat::ExtractInstallmentUseCase
   include Llm::ResponseParsing
 
-  Result = Struct.new(:transaction, :installment, :confidence, keyword_init: true)
+  Result = Struct.new(:plan, :confidence, keyword_init: true)
 
   # @param [Array<String>]
   # @param [Llm::Prompts::InstallmentPromptBuilder]
@@ -26,32 +26,23 @@ class UseCase::Chat::ExtractInstallmentUseCase
 
     total_amount       = parse_decimal(data["total_amount"])
     total_installments = data["total_installments"].to_i
-    return Result.new(transaction: nil, installment: nil, confidence: 0.0) if total_amount.blank? || total_installments.zero?
+    return Result.new(plan: nil, confidence: 0.0) if total_amount.blank? || total_installments.zero?
 
     monthly_amount = parse_decimal(data["monthly_amount"]) || (total_amount / total_installments)
     started_at     = parse_time(data["started_at"]) || Time.current
 
-    transaction = UseCase::Financial::Transaction::CreateTransactionUseCase.new.call(
-      user:             user,
-      amount:           monthly_amount,
-      transaction_type: "expense",
-      description:      data["description"].presence,
-      occurred_at:      started_at,
-      metadata:         { source: "chat_installment" }
-    )
-
-    installment = UseCase::Financial::Installment::CreateInstallmentUseCase.new.call(
-      user:           user,
-      transaction_id: transaction.id,
+    plan = UseCase::Financial::InstallmentPlan::CreateInstallmentPlanUseCase.new.call(
+      user: user,
       attributes: {
-        total_amount:        total_amount,
-        total_installments:  total_installments,
-        current_installment: 1,
-        monthly_amount:      monthly_amount,
-        started_at:          started_at
+        description:        data["description"].presence,
+        transaction_type:   "expense",
+        total_installments: total_installments,
+        monthly_amount:     monthly_amount,
+        total_amount:       total_amount,
+        first_competency:   started_at.to_date.beginning_of_month
       }
     )
 
-    Result.new(transaction: transaction, installment: installment, confidence: data["confidence"].to_f)
+    Result.new(plan: plan, confidence: data["confidence"].to_f)
   end
 end
