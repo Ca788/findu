@@ -3,12 +3,12 @@
 class UseCase::Financial::Recurrence::MaterializeRecurrenceRuleUseCase
   DEFAULT_HORIZON_MONTHS = 12
 
-  # Gera as transactions futuras da regra dentro da janela informada.
-  # É idempotente: usa find_or_create_by por (recurrence_rule_id, competency_month).
+  # Materializes future transactions for the rule within the horizon window.
+  # Idempotent per (recurrence_rule_id, competency_month).
   #
   # @param [Financial::RecurrenceRule] rule
-  # @param [Date, nil] up_to último mês a materializar (default: hoje + 12 meses)
-  # @return [Integer] quantidade de transactions criadas
+  # @param [Date, nil] up_to last month to materialize (default: today + 12 months)
+  # @return [Integer] number of transactions created
   def call(rule:, up_to: nil)
     return 0 unless rule.active?
 
@@ -36,7 +36,7 @@ class UseCase::Financial::Recurrence::MaterializeRecurrenceRuleUseCase
     (parsed || Date.current + DEFAULT_HORIZON_MONTHS.months).beginning_of_month
   end
 
-  # @return [Boolean] true se criou uma nova transaction
+  # @return [Boolean] true when a new transaction was created
   def materialize_month(rule, competency)
     existing = rule.transactions.find_by(competency_month: competency)
     return false if existing

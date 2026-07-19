@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class UseCase::Financial::InstallmentPlan::CancelInstallmentPlanUseCase
-  # Cancela o plano e remove as parcelas futuras pendentes.
-  # Parcelas passadas ou já pagas ficam preservadas no histórico.
+  # Cancels the plan and removes future pending installments.
+  # Past or paid installments keep the history.
   #
   # @param [User]
   # @param [String] plan id

@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 class UseCase::Financial::Recurrence::UpdateRecurrenceRuleUseCase
-  # Atualiza os atributos da regra e reflete os novos valores APENAS nas
-  # transactions futuras com status "pending". Transactions "paid" não são
-  # tocadas (preservam o histórico realizado).
+  # Updates the rule and propagates changes only to future pending transactions.
+  # Paid transactions are left untouched.
   #
   # @param [User]
   # @param [String] rule id

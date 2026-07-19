@@ -6,8 +6,8 @@ class UseCase::Financial::Transaction::CreateTransactionUseCase
   # @param [String] transaction_type
   # @param [String, nil] description
   # @param [DateTime, String, nil] occurred_at
-  # @param [Date, String, nil] competency_month accepts "YYYY-MM" ou Date; defaults to current month
-  # @param [String, nil] status "pending" (default) ou "paid"
+  # @param [Date, String, nil] competency_month accepts "YYYY-MM" or Date; defaults to current month
+  # @param [String, nil] status "pending" (default) or "paid"
   # @param [String, nil] category_id
   # @param [String, nil] artifact_id
   # @param [Hash, nil] metadata

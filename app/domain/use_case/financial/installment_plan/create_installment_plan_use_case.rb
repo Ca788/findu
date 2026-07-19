@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 class UseCase::Financial::InstallmentPlan::CreateInstallmentPlanUseCase
-  # Cria um plano parcelado e materializa TODAS as parcelas de uma vez
-  # (parcelas têm horizonte fixo = total_installments; diferente de recorrência,
-  # não faz sentido diferir a criação).
+  # Creates an installment plan and materializes all installments at once
+  # (fixed horizon = total_installments).
   #
   # @param [User]
   # @param [Hash]

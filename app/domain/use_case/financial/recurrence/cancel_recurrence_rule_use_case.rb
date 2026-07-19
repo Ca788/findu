@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class UseCase::Financial::Recurrence::CancelRecurrenceRuleUseCase
-  # Desativa a regra e remove APENAS ocorrências futuras "pending".
-  # Ocorrências "paid" ou de meses passados preservam o histórico.
+  # Deactivates the rule and deletes only future pending occurrences.
+  # Paid or past occurrences keep the history.
   #
   # @param [User]
   # @param [String] rule id

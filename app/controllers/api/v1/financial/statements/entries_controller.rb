@@ -83,7 +83,7 @@ module Api
             )
           end
 
-          # Aceita "YYYY-MM" na URL (:statement_month) OU competency no payload.
+          # Uses "YYYY-MM" from the URL (:statement_month) or competency in the payload.
           def competency_from_params
             entry_params[:competency_month] || params[:statement_month]
           end

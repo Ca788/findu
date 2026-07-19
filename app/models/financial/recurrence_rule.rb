@@ -63,7 +63,7 @@ module Financial
 
     scope :active_only, -> { where(active: true) }
 
-    # Ativa em qualquer momento da competência informada.
+    # Active rules that cover the given competency month.
     scope :covering_month, ->(month) {
       d = month.beginning_of_month
       active_only

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class UseCase::Financial::InstallmentPlan::UpdateInstallmentPlanUseCase
-  # Só permite atualizar descrição, categoria e valor mensal.
-  # Alterações afetam APENAS parcelas pendentes futuras.
-  # Para alterar quantidade/data-de-início, cancelar e criar um novo plano.
+  # Allows updating description, category, and monthly amount only.
+  # Changes apply only to future pending installments.
+  # To change count/start month, cancel and create a new plan.
   #
   # @param [User]
   # @param [String] plan id

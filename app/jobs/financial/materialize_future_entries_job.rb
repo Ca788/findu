@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 module Financial
-  # Diário. Garante que:
-  #   - Cada recurrence rule ativa tem 12 meses de transactions materializadas à frente.
-  #   - Cada installment plan ativo com todas as parcelas fecha para "completed" quando
-  #     todas as N transactions estiverem pagas.
+  # Daily job that:
+  #   - Keeps 12 months of transactions materialized for each active recurrence rule.
+  #   - Marks installment plans as "completed" when all installments are paid.
   #
-  # Não recria transactions removidas manualmente pelo usuário no passado (< mês corrente).
+  # Does not recreate transactions the user manually deleted in the past.
   class MaterializeFutureEntriesJob < ApplicationJob
     queue_as :default
 

@@ -16,7 +16,8 @@ module Findu
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    config.time_zone = "UTC"
+    # Civil dates (Date.current, recurrence materialization) use Brazil timezone.
+    config.time_zone = "America/Sao_Paulo"
     config.eager_load_paths << Rails.root.join("app", "domain")
     config.eager_load_paths << Rails.root.join("app", "infrastructure")
 
