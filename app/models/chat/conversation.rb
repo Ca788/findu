@@ -10,11 +10,13 @@
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  agent_id    :string
+#  model_id    :string
 #  user_id     :uuid             not null
 #
 # Indexes
 #
 #  index_chat_conversations_on_agent_id  (agent_id)
+#  index_chat_conversations_on_model_id  (model_id)
 #  index_chat_conversations_on_user_id   (user_id)
 #
 # Foreign Keys
@@ -25,7 +27,7 @@ module Chat
   class Conversation < ApplicationRecord
     self.table_name = "chat_conversations"
 
-    PERMITTED_ATTRIBUTES = %i[title agent_id].freeze
+    PERMITTED_ATTRIBUTES = %i[title agent_id model_id].freeze
 
     belongs_to :user
     has_many :messages,
@@ -37,6 +39,10 @@ module Chat
 
     validates :agent_id,
               inclusion: { in: ->(_) { Llm::Agents::Registry::ALL.map { |a| a.id.to_s } } },
+              allow_nil: true
+
+    validates :model_id,
+              inclusion: { in: ->(_) { Llm::Models.chain("CHAT_AGENT_MODEL") } },
               allow_nil: true
 
     def archived?

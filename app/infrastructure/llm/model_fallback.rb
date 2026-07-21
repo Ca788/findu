@@ -15,15 +15,26 @@ module Llm
       last_error = nil
       chain.each_with_index do |model, index|
         return yield(model)
-      rescue RubyLLM::RateLimitError => e
+      rescue RubyLLM::RateLimitError, RubyLLM::Error => e
         last_error = e
+        retryable = e.is_a?(RubyLLM::RateLimitError) || unavailable_model?(e)
+        raise e unless retryable && index < chain.size - 1
+
         Rails.logger.warn(
-          "[Llm::ModelFallback] rate limit on #{model} (#{index + 1}/#{chain.size})" \
-          "#{"; trying next" unless index == chain.size - 1}"
+          "[Llm::ModelFallback] #{e.class.name.demodulize} on #{model} " \
+          "(#{index + 1}/#{chain.size}); trying next"
         )
       end
 
       raise last_error
+    end
+
+    def unavailable_model?(error)
+      message = error.message.to_s.downcase
+      message.include?("no longer available") ||
+        message.include?("not found") ||
+        message.include?("is not found") ||
+        message.include?("invalid model")
     end
   end
 end

@@ -6,13 +6,7 @@ module Api
       class ModelsController < Api::BaseController
         def index
           render json: {
-            data: Llm::Models.catalog.map do |model|
-              {
-                id:          model[:id],
-                name:        model[:name],
-                description: model[:description]
-              }
-            end
+            data: Llm::Models.available("CHAT_AGENT_MODEL")
           }, status: :ok
         end
       end

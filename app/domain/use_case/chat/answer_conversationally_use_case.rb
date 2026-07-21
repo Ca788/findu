@@ -29,12 +29,13 @@ class UseCase::Chat::AnswerConversationallyUseCase
     user           = user_message.user
     selected_agent = agent || Llm::Agents::Registry::DEFAULT
     reply          = build_streaming_reply(user_message)
+    models         = Llm::Models.prefer(user_message.conversation.model_id, "CHAT_AGENT_MODEL")
 
     context     = @context_builder.call(user: user)
     system_text = @prompt_builder.call(context: context, side_facts: side_facts, agent: selected_agent)
     history     = history_messages(user_message)
 
-    final_body = Llm::ModelFallback.with_fallback(@models) do |model|
+    final_body = Llm::ModelFallback.with_fallback(models) do |model|
       chat = build_chat(model: model, system_text: system_text, history: history, user: user, agent: selected_agent)
       stream_response(chat: chat, user_message: user_message, reply: reply)
     end
