@@ -56,6 +56,7 @@ Rails.application.routes.draw do
 
       namespace :chat do
         resources :agents, only: [:index]
+        resources :models, only: [:index]
         resources :conversations, only: [:index, :show, :create, :update, :destroy] do
           resources :messages, only: [:index, :show, :create]
         end
