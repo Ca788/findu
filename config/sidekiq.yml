@@ -1,6 +1,6 @@
-:concurrency: <%= ENV.fetch("SIDEKIQ_CONCURRENCY", 5) %>
+:concurrency: <%= ENV.fetch("SIDEKIQ_CONCURRENCY", 3) %>
 :queues:
+  - chat
   - default
   - mailers
   - artifacts_ocr
-  - chat

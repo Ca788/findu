@@ -51,9 +51,13 @@ Rails.application.configure do
   # Prepend all log lines with the following tags.
   config.log_tags = [ :request_id ]
 
+  # Rails 7.0 RedisCacheStore does not accept `pool:` (passes kwargs to Redis.new).
   config.cache_store = :redis_cache_store, {
-    url:       ENV.fetch("REDIS_URL", "redis://localhost:6379/0"),
-    namespace: "findu:cache"
+    url:                ENV.fetch("REDIS_URL", "redis://localhost:6379/0"),
+    namespace:          "findu:cache",
+    expires_in:         15.minutes,
+    race_condition_ttl: 10.seconds,
+    error_handler:      ->(*) { }
   }
 
   # Use a real queuing backend for Active Job (and separate queues per environment).

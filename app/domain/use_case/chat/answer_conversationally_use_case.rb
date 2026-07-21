@@ -4,7 +4,8 @@ class UseCase::Chat::AnswerConversationallyUseCase
   class StreamAlreadyStartedError < StandardError; end
 
   HISTORY_LIMIT          = 20
-  STREAM_FLUSH_SECONDS   = 0.08
+  STREAM_FLUSH_SECONDS   = ENV.fetch("CHAT_STREAM_FLUSH_SECONDS", "0.35").to_f
+  STREAM_FLUSH_MIN_CHARS = ENV.fetch("CHAT_STREAM_FLUSH_MIN_CHARS", "24").to_i
   FALLBACK_BODY          = "Desculpe, tive um problema agora. Pode repetir?"
   RATE_LIMIT_BODY        = "Atingi o limite de requisições do modelo de IA agora. " \
                            "Tente de novo em alguns segundos — ou aumente a cota do Gemini."
@@ -92,13 +93,15 @@ class UseCase::Chat::AnswerConversationallyUseCase
     chat.ask(user_message.body.to_s, with: attachment_paths) do |chunk|
       buffer << chunk.content.to_s
       now = Time.current
-      next unless (now - last_flush_at) >= STREAM_FLUSH_SECONDS
+      pending = buffer.length - flushed_upto
+      next unless pending >= STREAM_FLUSH_MIN_CHARS && (now - last_flush_at) >= STREAM_FLUSH_SECONDS
 
       flush_delta!(reply, buffer, flushed_upto)
       flushed_upto  = buffer.length
       last_flush_at = now
     end
 
+    flush_delta!(reply, buffer, flushed_upto) if buffer.length > flushed_upto
     buffer.presence || FALLBACK_BODY
   rescue RubyLLM::RateLimitError
     raise if flushed_upto.zero?

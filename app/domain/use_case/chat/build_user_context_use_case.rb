@@ -4,7 +4,7 @@ class UseCase::Chat::BuildUserContextUseCase
   Context = Struct.new(:statement, :budgets, :recent_transactions, :reference_date, keyword_init: true)
 
   RECENT_TRANSACTIONS_LIMIT = 10
-  CACHE_TTL                 = 5.minutes
+  CACHE_TTL                 = 15.minutes
 
   def initialize(statement_use_case: UseCase::Financial::Statements::ShowMonthlyStatementUseCase.new,
                  budgets_use_case:   UseCase::Financial::Budget::ListCurrentBudgetsUseCase.new)
