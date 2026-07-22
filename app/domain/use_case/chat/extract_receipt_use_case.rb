@@ -5,10 +5,11 @@ class UseCase::Chat::ExtractReceiptUseCase
 
   Receipt = Struct.new(
     :amount, :occurred_at, :description, :transaction_type, :confidence, :raw_text,
+    :is_installment, :total_installments, :monthly_amount, :total_amount,
     keyword_init: true
   )
 
-  FALLBACK_PAYLOAD = { "confidence" => 0.0, "transaction_type" => "expense" }.freeze
+  FALLBACK_PAYLOAD = { "confidence" => 0.0, "transaction_type" => "expense", "is_installment" => false }.freeze
 
   def initialize(models: Llm::Models.chain("CHAT_RECEIPT_MODEL"),
                  prompt_builder: Llm::Prompts::ReceiptPromptBuilder.new,
@@ -18,9 +19,6 @@ class UseCase::Chat::ExtractReceiptUseCase
     @schema         = schema
   end
 
-  # Tries to extract a receipt from each image attachment of the message.
-  # Returns one Receipt per image (failed extractions come with confidence 0).
-  #
   # @param [Chat::Message] message
   # @return [Array<Receipt>]
   def call(message:)
@@ -46,13 +44,18 @@ class UseCase::Chat::ExtractReceiptUseCase
   end
 
   def build_receipt(data)
+    is_installment = ActiveModel::Type::Boolean.new.cast(data["is_installment"])
     Receipt.new(
-      amount:           parse_decimal(data["amount"]),
-      occurred_at:      parse_time(data["occurred_at"]),
-      description:      data["description"],
-      transaction_type: parse_transaction_type(data["transaction_type"]),
-      confidence:       data["confidence"].to_f,
-      raw_text:         data["raw_text"].to_s
+      amount:             parse_decimal(data["amount"]),
+      occurred_at:        parse_time(data["occurred_at"]),
+      description:        data["description"],
+      transaction_type:   parse_transaction_type(data["transaction_type"]),
+      confidence:         data["confidence"].to_f,
+      raw_text:           data["raw_text"].to_s,
+      is_installment:     is_installment,
+      total_installments: data["total_installments"].presence&.to_i,
+      monthly_amount:     parse_decimal(data["monthly_amount"]),
+      total_amount:       parse_decimal(data["total_amount"])
     )
   end
 

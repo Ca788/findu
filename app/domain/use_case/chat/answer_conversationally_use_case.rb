@@ -34,10 +34,21 @@ class UseCase::Chat::AnswerConversationallyUseCase
     context     = @context_builder.call(user: user)
     system_text = @prompt_builder.call(context: context, side_facts: side_facts, agent: selected_agent)
     history     = history_messages(user_message)
+    attachment_paths =
+      if side_facts.any? { |fact| fact.to_s.include?("NÃO registrado") }
+        []
+      else
+        resolve_attachment_paths(user_message)
+      end
 
     final_body = Llm::ModelFallback.with_fallback(models) do |model|
       chat = build_chat(model: model, system_text: system_text, history: history, user: user, agent: selected_agent)
-      stream_response(chat: chat, user_message: user_message, reply: reply)
+      stream_response(
+        chat: chat,
+        user_message: user_message,
+        reply: reply,
+        attachment_paths: attachment_paths
+      )
     end
 
     finalize_reply(reply, body: final_body)
@@ -85,11 +96,10 @@ class UseCase::Chat::AnswerConversationallyUseCase
                 .last(HISTORY_LIMIT)
   end
 
-  def stream_response(chat:, user_message:, reply:)
+  def stream_response(chat:, user_message:, reply:, attachment_paths: [])
     buffer        = +""
     flushed_upto  = 0
     last_flush_at = Time.current
-    attachment_paths = resolve_attachment_paths(user_message)
 
     chat.ask(user_message.body.to_s, with: attachment_paths) do |chunk|
       buffer << chunk.content.to_s

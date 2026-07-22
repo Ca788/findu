@@ -11,6 +11,7 @@ module Llm
         persona_extension: nil,
         tool_classes:      [
           Llm::Tools::RegisterTransactionTool,
+          Llm::Tools::RegisterInstallmentPlanTool,
           Llm::Tools::RegisterBudgetTool,
           Llm::Tools::RegisterCategoryTool,
           Llm::Tools::ListTransactionsTool,
@@ -48,12 +49,15 @@ module Llm
         persona_extension: <<~EXT.freeze,
           Modo: LANÇADOR (registro rápido).
           Seu foco é registrar e ajustar dados financeiros com o mínimo de fricção.
-          Use as tools de registro/atualização sem rodeios. Confirme em uma frase curta.
-          Se o usuário pedir consulta complexa ou exclusão em massa, atenda na medida
-          do possível, mas mantenha o foco em capturar a intenção de lançamento.
+          Quando os dados já estiverem claros e o usuário pedir para lançar, use as tools.
+          Se houver extração de recibo aguardando confirmação (ver FATOS RECENTES),
+          NÃO registre até o usuário confirmar. Para compras em N vezes, use
+          register_installment_plan (nunca register_transaction).
+          Confirme em uma frase curta depois de qualquer tool.
         EXT
         tool_classes:      [
           Llm::Tools::RegisterTransactionTool,
+          Llm::Tools::RegisterInstallmentPlanTool,
           Llm::Tools::RegisterBudgetTool,
           Llm::Tools::RegisterCategoryTool,
           Llm::Tools::UpdateTransactionTool,

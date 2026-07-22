@@ -121,7 +121,16 @@ module Llm
       def side_facts_section(side_facts)
         return nil if side_facts.blank?
 
-        "FATOS RECENTES (acabaram de acontecer):\n#{side_facts.map { |f| "- #{f}" }.join("\n")}"
+        <<~SECTION.strip
+          FATOS RECENTES (acabaram de acontecer):
+          #{side_facts.map { |f| "- #{f}" }.join("\n")}
+
+          REGRAS SOBRE ESTES FATOS:
+          - Se houver dados de recibo/imagem ainda NÃO registrados, NÃO chame tools de criação neste turno.
+          - Mostre o resumo extraído e peça confirmação explícita do usuário.
+          - Só depois da confirmação (sim/pode/confirma/registra) use a tool correta.
+          - Parcelamento confirmado → register_installment_plan. Lançamento único → register_transaction.
+        SECTION
       end
     end
   end

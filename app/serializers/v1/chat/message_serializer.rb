@@ -7,7 +7,7 @@ module V1
 
       view :default do
         fields :role, :kind, :body, :status, :intent, :conversation_id,
-               :parent_message_id, :created_at, :updated_at
+               :parent_message_id, :client_message_id, :created_at, :updated_at
       end
 
       view :extended do
