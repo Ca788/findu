@@ -129,9 +129,20 @@ class UseCase::Chat::AnswerConversationallyUseCase
   def resolve_attachment_paths(message)
     return [] unless message.attachments.attached?
 
-    message.attachments.map do |att|
-      path = ActiveStorage::Blob.service.path_for(att.key)
-      path if File.exist?(path)
-    end.compact
+    message.attachments.filter_map { |att| local_path_for(att) }
+  end
+
+  def local_path_for(attachment)
+    service = ActiveStorage::Blob.service
+    if service.respond_to?(:path_for)
+      path = service.path_for(attachment.key)
+      return path if File.exist?(path)
+    end
+
+    ext = File.extname(attachment.filename.to_s)
+    tempfile = Tempfile.new(["chat-att", ext], binmode: true)
+    attachment.download { |chunk| tempfile.write(chunk) }
+    tempfile.flush
+    tempfile.path
   end
 end
