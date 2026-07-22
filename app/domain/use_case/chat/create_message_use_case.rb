@@ -34,10 +34,31 @@ class UseCase::Chat::CreateMessageUseCase
     message.attachments.attach(attachments) if attachments.any?
 
     message.save!
+    assign_title_from_first_message!(conversation, message)
 
     conversation.broadcast_message!(message)
     Chat::ProcessMessageJob.perform_later(message)
 
     message
+  end
+
+  private
+
+  def assign_title_from_first_message!(conversation, message)
+    return if conversation.title.present?
+    return unless conversation.messages.where(role: "user").limit(2).count == 1
+
+    title =
+      if message.body.present?
+        message.body.to_s.squish.truncate(80)
+      elsif message.kind_audio?
+        "Áudio"
+      elsif message.image_attachments.any?
+        "Imagem"
+      elsif message.attachments.attached?
+        "Anexo"
+      end
+
+    conversation.update!(title: title) if title.present?
   end
 end

@@ -59,6 +59,9 @@ gem "devise-jwt"
 # Sidekiq for background jobs
 gem "sidekiq", "~> 7.0"
 
+# Datadog APM
+gem "datadog", "~> 2.0", require: false
+
 # Pinned to avoid breaking Sidekiq 7.3.x (connection_pool 3.x changed `pop` signature
 # and crashes the Sidekiq scheduler on boot). Remove when upgrading to Sidekiq 8.x.
 gem "connection_pool", "~> 2.4"
