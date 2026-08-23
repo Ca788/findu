@@ -19,6 +19,24 @@ module Api
           ), status: :ok
         end
 
+        def totals
+          totals = UseCase::Financial::Category::ListCategoryTotalsUseCase.new.call(
+            user: @user,
+            **totals_filters
+          )
+
+          page = Kaminari.paginate_array(totals)
+                         .page(page_param)
+                         .per(per_page_param)
+
+          render json: ApiResponseSerializer.render_data_array(
+            page,
+            serializer:      ::V1::Financial::CategoryTotalSerializer,
+            serializer_view: serializer_view_param,
+            pagination:      pagination_for(page)
+          ), status: :ok
+        end
+
         def show
           category = @user.categories.find(params[:id])
 
@@ -71,6 +89,16 @@ module Api
 
         def category_params
           params.require(:category).permit(:name)
+        end
+
+        def totals_filters
+          {
+            from:             params[:from],
+            to:               params[:to],
+            transaction_type: params[:transaction_type],
+            status:           params[:status],
+            payer_phone:      params[:payer_phone]
+          }
         end
       end
     end

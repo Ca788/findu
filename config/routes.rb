@@ -28,11 +28,24 @@ Rails.application.routes.draw do
       end
 
       namespace :financial do
-        resources :categories, only: [:index, :show, :create, :update, :destroy]
+        resources :categories, only: [:index, :show, :create, :update, :destroy] do
+          collection { get :totals }
+
+          resources :transactions,
+                    controller: "categories/transactions",
+                    only:       [:index]
+        end
 
         resources :budgets, only: [:index, :show, :create, :update, :destroy] do
           collection do
             get :current
+          end
+        end
+
+        resources :receipts, only: [:index, :show, :create] do
+          member do
+            post :deliver
+            get  :download
           end
         end
 
@@ -52,6 +65,10 @@ Rails.application.routes.draw do
             end
           end
         end
+      end
+
+      namespace :intelligence do
+        resources :insights, only: [:index]
       end
 
       namespace :chat do

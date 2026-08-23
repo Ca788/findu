@@ -23,8 +23,18 @@
 #
 module Intelligence
   class Insight < ApplicationRecord
+    REFERENCE_MONTHLY_STATEMENT = "monthly_statement"
+
+    SEVERITIES      = %w[info warning critical].freeze
+    DEFAULT_SEVERITY = "info"
+
     belongs_to :user
 
     validates :reference_type, presence: true
+    validates :severity, inclusion: { in: SEVERITIES }, allow_nil: true
+
+    scope :by_reference_type, ->(type)     { where(reference_type: type) if type.present? }
+    scope :by_severity,       ->(severity) { where(severity: severity) if severity.present? }
+    scope :for_period,        ->(period)   { where("metadata->>'period' = ?", period) if period.present? }
   end
 end

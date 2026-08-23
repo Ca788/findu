@@ -8,7 +8,7 @@ module Api
           def create
             transaction = UseCase::Financial::Transaction::CreateTransactionUseCase.new.call(
               user: @user,
-              **entry_params.to_h.symbolize_keys.merge(
+              **create_entry_params.to_h.symbolize_keys.merge(
                 competency_month: competency_from_params
               )
             )
@@ -77,13 +77,20 @@ module Api
           private
 
           def entry_params
-            params.require(:entry).permit(
-              *(::Financial::Transaction::PERMITTED_ATTRIBUTES - [:metadata]),
-              metadata: {}
+            permit_entry(::Financial::Transaction::PERMITTED_ATTRIBUTES)
+          end
+
+          def create_entry_params
+            permit_entry(
+              ::Financial::Transaction::PERMITTED_ATTRIBUTES +
+                ::Financial::Transaction::CREATE_ONLY_ATTRIBUTES
             )
           end
 
-          # Uses "YYYY-MM" from the URL (:statement_month) or competency in the payload.
+          def permit_entry(attributes)
+            params.require(:entry).permit(*(attributes - [:metadata]), metadata: {})
+          end
+
           def competency_from_params
             entry_params[:competency_month] || params[:statement_month]
           end

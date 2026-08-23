@@ -1,0 +1,11 @@
+generate_ai_insights:
+  cron: "<%= ENV.fetch('INSIGHTS_CRON', '0 6 * * *') %>"
+  class: "Intelligence::EnqueueInsightsJob"
+  queue: insights
+  description: "Gera insights financeiros via IA para cada usuário ativo."
+
+materialize_future_entries:
+  cron: "<%= ENV.fetch('MATERIALIZE_ENTRIES_CRON', '30 3 * * *') %>"
+  class: "Financial::MaterializeFutureEntriesJob"
+  queue: default
+  description: "Materializa recorrências futuras e conclui parcelamentos quitados."

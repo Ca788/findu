@@ -59,6 +59,13 @@ gem "devise-jwt"
 # Sidekiq for background jobs
 gem "sidekiq", "~> 7.0"
 
+# Recurring job scheduling (config/schedule.yml)
+gem "sidekiq-cron", "~> 1.12"
+
+# PDF rendering (category receipts)
+gem "prawn", "~> 2.5"
+gem "prawn-table", "~> 0.2"
+
 # Datadog APM
 gem "datadog", "~> 2.0", require: false
 

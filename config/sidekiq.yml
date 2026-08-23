@@ -4,3 +4,5 @@
   - default
   - mailers
   - artifacts_ocr
+  - receipts
+  - insights

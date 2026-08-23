@@ -10,6 +10,8 @@
 #  metadata            :jsonb
 #  occurred_at         :datetime
 #  paid_at             :datetime
+#  payer_name          :string
+#  payer_phone         :string
 #  status              :string           default("pending"), not null
 #  transaction_type    :string           not null
 #  created_at          :datetime         not null
@@ -28,6 +30,7 @@
 #  index_transactions_on_recurrence_rule_id            (recurrence_rule_id)
 #  index_transactions_on_user_id                       (user_id)
 #  index_transactions_on_user_id_and_competency_month  (user_id,competency_month)
+#  index_transactions_on_user_id_and_payer_phone       (user_id,payer_phone)
 #  index_transactions_on_user_id_and_status            (user_id,status)
 #
 # Foreign Keys
@@ -49,9 +52,12 @@ module Financial
       competency_month
       status
       category_id
+      payer_name
+      payer_phone
       metadata
     ].freeze
 
+    CREATE_ONLY_ATTRIBUTES = %i[category_name].freeze
     STATUSES = { pending: "pending", paid: "paid" }.freeze
     SOURCE_MANUAL      = "manual"
     SOURCE_RECURRENCE  = "recurrence"
@@ -81,8 +87,14 @@ module Financial
 
     scope :by_type,        ->(type)        { where(transaction_type: type) if type.present? }
     scope :by_category,    ->(category_id) { where(category_id: category_id) if category_id.present? }
+    scope :by_status,      ->(status)      { where(status: status) if status.present? }
+    scope :by_payer_phone, ->(phone)       { where(payer_phone: phone) if phone.present? }
     scope :occurred_from,  ->(from)        { where("occurred_at >= ?", from) if from.present? }
     scope :occurred_until, ->(to)          { where("occurred_at <= ?", to) if to.present? }
+
+    scope :competency_from,  ->(date) { where(competency_month: date.beginning_of_month..) if date.present? }
+    scope :competency_until, ->(date) { where(competency_month: ..date.beginning_of_month) if date.present? }
+    scope :uncategorized,    -> { where(category_id: nil) }
 
     scope :in_competency,  ->(date) {
       d = date.is_a?(String) ? Date.parse(date) : date.to_date

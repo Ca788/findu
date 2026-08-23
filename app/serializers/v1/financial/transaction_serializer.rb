@@ -8,7 +8,7 @@ module V1
       view :default do
         fields :amount, :transaction_type, :description,
                :occurred_at, :competency_month, :status, :paid_at,
-               :category_id, :installment_number,
+               :category_id, :payer_name, :payer_phone, :installment_number,
                :installment_plan_id, :recurrence_rule_id
 
         field(:source) { |t| t.source }

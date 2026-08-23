@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_07_21_010146) do
+ActiveRecord::Schema[7.0].define(version: 2026_08_23_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -150,6 +150,23 @@ ActiveRecord::Schema[7.0].define(version: 2026_07_21_010146) do
     t.index ["user_id"], name: "index_installment_plans_on_user_id"
   end
 
+  create_table "receipts", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "payer_name"
+    t.string "payer_phone", null: false
+    t.date "period_start", null: false
+    t.date "period_end", null: false
+    t.decimal "total_amount", precision: 10, scale: 2, default: "0.0", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "sent_at"
+    t.jsonb "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["status"], name: "index_receipts_on_status"
+    t.index ["user_id", "created_at"], name: "index_receipts_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_receipts_on_user_id"
+  end
+
   create_table "recurrence_rules", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id", null: false
     t.uuid "category_id"
@@ -186,11 +203,14 @@ ActiveRecord::Schema[7.0].define(version: 2026_07_21_010146) do
     t.integer "installment_number"
     t.uuid "recurrence_rule_id"
     t.uuid "installment_plan_id"
+    t.string "payer_name"
+    t.string "payer_phone"
     t.index ["artifact_id"], name: "index_transactions_on_artifact_id"
     t.index ["category_id"], name: "index_transactions_on_category_id"
     t.index ["installment_plan_id"], name: "index_transactions_on_installment_plan_id"
     t.index ["recurrence_rule_id"], name: "index_transactions_on_recurrence_rule_id"
     t.index ["user_id", "competency_month"], name: "index_transactions_on_user_id_and_competency_month"
+    t.index ["user_id", "payer_phone"], name: "index_transactions_on_user_id_and_payer_phone"
     t.index ["user_id", "status"], name: "index_transactions_on_user_id_and_status"
     t.index ["user_id"], name: "index_transactions_on_user_id"
   end
@@ -224,6 +244,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_07_21_010146) do
   add_foreign_key "insights", "users"
   add_foreign_key "installment_plans", "categories"
   add_foreign_key "installment_plans", "users"
+  add_foreign_key "receipts", "users"
   add_foreign_key "recurrence_rules", "categories"
   add_foreign_key "recurrence_rules", "users"
   add_foreign_key "transactions", "artifacts"

@@ -92,6 +92,53 @@ RSpec.describe UseCase::Financial::Transaction::CreateTransactionUseCase do
       end
     end
 
+    context "when category_name is given" do
+      it "creates the category on the fly and links it" do
+        expect {
+          use_case.call(user: user, amount: 80, transaction_type: "expense", category_name: "Pets")
+        }.to change(user.categories, :count).by(1)
+
+        expect(user.transactions.last.category.name).to eq("Pets")
+      end
+
+      it "reuses an existing category regardless of casing" do
+        create(:financial_category, user: user, name: "Pets")
+
+        expect {
+          use_case.call(user: user, amount: 80, transaction_type: "expense", category_name: "pets")
+        }.not_to change(user.categories, :count)
+
+        expect(user.transactions.last.category.name).to eq("Pets")
+      end
+
+      it "gives precedence to category_id over category_name" do
+        transaction = use_case.call(
+          user:             user,
+          amount:           80,
+          transaction_type: "expense",
+          category_id:      category.id,
+          category_name:    "Pets"
+        )
+
+        expect(transaction.category_id).to eq(category.id)
+        expect(user.categories.where(name: "Pets")).to be_empty
+      end
+    end
+
+    context "when payer data is given" do
+      it "stores the payer identification" do
+        transaction = use_case.call(
+          user:             user,
+          amount:           120,
+          transaction_type: "income",
+          payer_name:       "Maria",
+          payer_phone:      "+5511988887777"
+        )
+
+        expect(transaction).to have_attributes(payer_name: "Maria", payer_phone: "+5511988887777")
+      end
+    end
+
     context "budget warnings" do
       it "returns an empty array when there is no covering budget" do
         transaction = use_case.call(user: user, amount: 100, transaction_type: "expense", occurred_at: Time.current)

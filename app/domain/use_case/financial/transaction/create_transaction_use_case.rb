@@ -1,22 +1,31 @@
 # frozen_string_literal: true
 
 class UseCase::Financial::Transaction::CreateTransactionUseCase
-  # @param [User] user
-  # @param [BigDecimal, Numeric, String] amount
-  # @param [String] transaction_type
-  # @param [String, nil] description
-  # @param [DateTime, String, nil] occurred_at
-  # @param [Date, String, nil] competency_month accepts "YYYY-MM" or Date; defaults to current month
-  # @param [String, nil] status "pending" (default) or "paid"
-  # @param [String, nil] category_id
-  # @param [String, nil] artifact_id
-  # @param [Hash, nil] metadata
+  # @param [UseCase::Financial::Category::FindOrCreateByNameUseCase]
+  def initialize(category_finder: UseCase::Financial::Category::FindOrCreateByNameUseCase.new)
+    @category_finder = category_finder
+  end
+
+  # @param [User]
+  # @param [BigDecimal, Numeric, String]
+  # @param [String]
+  # @param [String, nil]
+  # @param [DateTime, String, nil]
+  # @param [Date, String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
+  # @param [Hash, nil]
   # @return [Financial::Transaction]
   def call(user:, amount:, transaction_type:,
            description: nil, occurred_at: nil,
            competency_month: nil, status: "pending",
-           category_id: nil, artifact_id: nil, metadata: nil)
-    category = resolve_category(user, category_id)
+           category_id: nil, category_name: nil, artifact_id: nil,
+           payer_name: nil, payer_phone: nil, metadata: nil)
+    category = resolve_category(user, category_id, category_name)
     artifact = resolve_artifact(user, artifact_id)
 
     transaction = user.transactions.create!(
@@ -28,6 +37,8 @@ class UseCase::Financial::Transaction::CreateTransactionUseCase
       status:           status.presence || "pending",
       category:         category,
       artifact:         artifact,
+      payer_name:       payer_name,
+      payer_phone:      payer_phone,
       metadata:         metadata
     )
 
@@ -52,10 +63,11 @@ class UseCase::Financial::Transaction::CreateTransactionUseCase
     )
   end
 
-  def resolve_category(user, id)
-    return nil if id.blank?
+  # @return [Financial::Category, nil]
+  def resolve_category(user, id, name)
+    return user.categories.find(id) if id.present?
 
-    user.categories.find(id)
+    @category_finder.call(user: user, name: name)
   end
 
   def resolve_artifact(user, id)

@@ -7,8 +7,8 @@ module Messaging
     class Provider
       Credentials = Struct.new(:account_sid, :auth_token, :phone_number, keyword_init: true)
 
-      # @param [Credentials] credentials
-      # @param [SignatureValidator] signature_validator
+      # @param [Credentials]
+      # @param [SignatureValidator]
       def initialize(credentials:, signature_validator: nil)
         @credentials        = credentials
         @signature_validator = signature_validator || SignatureValidator.new(auth_token: credentials.auth_token)
@@ -56,7 +56,20 @@ module Messaging
       # @param [String]
       # @return [void]
       def send_message(to:, body:)
-        client.messages.create(from: sender_number, to: to, body: body)
+        client.messages.create(from: sender_number, to: whatsapp_address(to), body: body)
+      end
+
+      # @param [String]
+      # @param [String]
+      # @param [String, Array<String>]
+      # @return [void]
+      def send_media(to:, body:, media_url:)
+        client.messages.create(
+          from:      sender_number,
+          to:        whatsapp_address(to),
+          body:      body,
+          media_url: Array(media_url)
+        )
       end
 
       private
@@ -76,8 +89,12 @@ module Messaging
       end
 
       def sender_number
-        number = @credentials.phone_number
-        number.start_with?("whatsapp:") ? number : "whatsapp:#{number}"
+        whatsapp_address(@credentials.phone_number)
+      end
+
+      def whatsapp_address(number)
+        value = number.to_s
+        value.start_with?("whatsapp:") ? value : "whatsapp:#{value}"
       end
     end
   end

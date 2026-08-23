@@ -1,20 +1,22 @@
 # frozen_string_literal: true
 
 class UseCase::Financial::Transaction::UpdateTransactionUseCase
-  # @param [User] user
-  # @param [String] id
-  # @param [BigDecimal, Numeric, String, nil] amount
-  # @param [String, nil] transaction_type
-  # @param [String, nil] description
-  # @param [DateTime, String, nil] occurred_at
-  # @param [Date, String, nil] competency_month
-  # @param [String, nil] status
-  # @param [String, nil] category_id
-  # @param [Hash, nil] metadata
+  # @param [User]
+  # @param [String]
+  # @param [BigDecimal, Numeric, String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
+  # @param [DateTime, String, nil]
+  # @param [Date, String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
+  # @param [String, nil]
+  # @param [Hash, nil]
   # @return [Financial::Transaction]
   def call(user:, id:, amount: nil, transaction_type: nil, description: nil,
            occurred_at: nil, competency_month: nil, status: nil,
-           category_id: nil, metadata: nil)
+           category_id: nil, payer_name: nil, payer_phone: nil, metadata: nil)
     transaction = user.transactions.find(id)
 
     attributes = {
@@ -23,6 +25,8 @@ class UseCase::Financial::Transaction::UpdateTransactionUseCase
       description:      description,
       occurred_at:      occurred_at,
       status:           status,
+      payer_name:       payer_name,
+      payer_phone:      payer_phone,
       metadata:         metadata
     }.compact
 

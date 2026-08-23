@@ -29,6 +29,16 @@ module Chat
           "(#{budget.period_start.strftime('%d/%m')} a #{budget.period_end.strftime('%d/%m')})."
       end
 
+      # @param [Financial::Receipt]
+      # @return [String]
+      def receipt(receipt)
+        greeting = receipt.payer_name.present? ? "Olá, #{receipt.payer_name}! " : ""
+        period   = "#{receipt.period_start.strftime('%m/%Y')} a #{receipt.period_end.strftime('%m/%Y')}"
+
+        "#{greeting}Segue seu comprovante por categoria referente a #{period}. " \
+          "Total: #{Formatters::Brl.call(receipt.total_amount)}."
+      end
+
       # @param [Financial::InstallmentPlan]
       # @return [String]
       def installment_plan(plan)
