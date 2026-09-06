@@ -14,9 +14,9 @@ concurrency:
 
 jobs:
   test:
-    name: RSpec
+    name: RSpec + UseCase health
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -44,9 +44,11 @@ jobs:
           --health-retries=5
 
     env:
+      CI: true
       RAILS_ENV: test
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/findu_test
       REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY_BASE: test-secret-key-base
       RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
 
     steps:
@@ -56,10 +58,30 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
+          ruby-version: "3.3.5"
           bundler-cache: true
 
       - name: Prepare database
         run: bundle exec rails db:test:prepare
 
       - name: Run RSpec
-        run: bundle exec rspec --format documentation
+        run: |
+          mkdir -p tmp
+          bundle exec rspec \
+            --format documentation \
+            --format json \
+            --out tmp/rspec.json
+
+      - name: UseCase health report
+        if: always()
+        run: ruby script/use_case_health_report.rb
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: usecase-health
+          path: |
+            tmp/rspec.json
+            tmp/use_case_health.md
+          if-no-files-found: warn
