@@ -5,18 +5,14 @@ class UseCase::Financial::Receipt::GenerateCategoryReceiptUseCase
 
   # @param [UseCase::Financial::Category::ListCategoryTotalsUseCase]
   # @param [Documents::CategoryReceiptPdf]
-  # @param [Support::TransactionScope]
   def initialize(totals_use_case: UseCase::Financial::Category::ListCategoryTotalsUseCase.new,
-                 renderer: Documents::CategoryReceiptPdf.new,
-                 scope: Support::TransactionScope.new)
+                 renderer: Documents::CategoryReceiptPdf.new)
     @totals_use_case = totals_use_case
     @renderer        = renderer
-    @scope           = scope
   end
 
   # @param [User]
   # @param [String]
-  # @param [String, nil]
   # @param [Date, String, nil]
   # @param [Date, String, nil]
   # @param [String, nil]
@@ -24,10 +20,10 @@ class UseCase::Financial::Receipt::GenerateCategoryReceiptUseCase
   # @raise [ArgumentError]
   # @raise [EmptyPeriodError]
   # @return [Financial::Receipt]
-  def call(user:, payer_phone:, payer_name: nil, from: nil, to: nil,
-           transaction_type: nil, status: nil)
-    phone = payer_phone.to_s.strip
-    raise ArgumentError, "payer_phone is required" if phone.blank?
+  def call(user:, category_id:, from: nil, to: nil, transaction_type: nil, status: "paid")
+    category = user.categories.find(category_id)
+    phone    = category.whatsapp.to_s.strip
+    raise ArgumentError, "category whatsapp is required" if phone.blank?
 
     period_start = Support::DateParser.parse_month(from) || Date.current.beginning_of_month
     period_end   = Support::DateParser.parse_month(to)   || period_start
@@ -35,7 +31,7 @@ class UseCase::Financial::Receipt::GenerateCategoryReceiptUseCase
 
     filters = {
       user:             user,
-      payer_phone:      phone,
+      category_id:      category.id,
       from:             period_start,
       to:               period_end,
       transaction_type: transaction_type,
@@ -43,15 +39,16 @@ class UseCase::Financial::Receipt::GenerateCategoryReceiptUseCase
     }
 
     totals = @totals_use_case.call(**filters)
-    raise EmptyPeriodError, "No transactions found for this payer in the period" if totals.empty?
+    raise EmptyPeriodError, "No paid transactions found for this category in the period" if totals.empty?
 
     receipt = user.receipts.create!(
-      payer_name:   payer_name.presence || stored_payer_name(filters),
+      category:     category,
+      payer_name:   category.name,
       payer_phone:  phone,
       period_start: period_start,
       period_end:   period_end,
-      total_amount: totals.sum(&:total),
-      metadata:     metadata_for(filters, totals)
+      total_amount: totals.sum(&:paid_amount),
+      metadata:     metadata_for(filters, totals, category)
     )
 
     attach_pdf(receipt, totals, user)
@@ -70,14 +67,10 @@ class UseCase::Financial::Receipt::GenerateCategoryReceiptUseCase
     )
   end
 
-  # @return [String, nil]
-  def stored_payer_name(filters)
-    @scope.call(**filters).where.not(payer_name: [nil, ""]).pick(:payer_name)
-  end
-
   # @return [Hash]
-  def metadata_for(filters, totals)
+  def metadata_for(filters, totals, category)
     {
+      "category_id"      => category.id,
       "transaction_type" => filters[:transaction_type],
       "status"           => filters[:status],
       "categories_count" => totals.size,

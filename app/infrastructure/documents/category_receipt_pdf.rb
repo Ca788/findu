@@ -43,8 +43,8 @@ module Documents
     def header_lines(receipt, issuer)
       [
         "Emitido por: #{issuer.name}",
-        "Pagador: #{receipt.payer_name.presence || 'Nao informado'}",
-        "Telefone: #{receipt.payer_phone}",
+        "Categoria: #{receipt.payer_name.presence || 'Nao informada'}",
+        "WhatsApp: #{receipt.payer_phone}",
         "Periodo: #{format_month(receipt.period_start)} a #{format_month(receipt.period_end)}",
         "Emissao: #{Time.current.strftime('%d/%m/%Y %H:%M')}"
       ]

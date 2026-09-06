@@ -10,6 +10,7 @@ class UseCase::Financial::Category::ListCategoryTotalsUseCase
     :paid_amount,
     :pending_amount,
     :transactions_count,
+    :whatsapp,
     keyword_init: true
   ) do
     # @return [BigDecimal]
@@ -37,19 +38,22 @@ class UseCase::Financial::Category::ListCategoryTotalsUseCase
   # @param [String, nil]
   # @param [String, nil]
   # @return [Array<Total>]
-  def call(user:, from: nil, to: nil, transaction_type: nil, status: nil, payer_phone: nil)
+  def call(user:, from: nil, to: nil, transaction_type: nil, status: nil,
+           payer_phone: nil, category_id: nil)
     rows = @scope.call(
       user:             user,
       from:             from,
       to:               to,
       transaction_type: transaction_type,
       status:           status,
-      payer_phone:      payer_phone
+      payer_phone:      payer_phone,
+      category_id:      category_id
     ).left_joins(:category)
-     .group("categories.id", "categories.name")
+     .group("categories.id", "categories.name", "categories.whatsapp")
      .pluck(
        Arel.sql("categories.id"),
        Arel.sql("categories.name"),
+       Arel.sql("categories.whatsapp"),
        Arel.sql(SUM_INCOME),
        Arel.sql(SUM_EXPENSE),
        Arel.sql(SUM_PAID),
@@ -65,11 +69,12 @@ class UseCase::Financial::Category::ListCategoryTotalsUseCase
   # @param [Array]
   # @return [Total]
   def build_total(row)
-    id, name, income, expense, paid, pending, count = row
+    id, name, whatsapp, income, expense, paid, pending, count = row
 
     Total.new(
       category_id:        id,
       category_name:      name || UNCATEGORIZED_LABEL,
+      whatsapp:           whatsapp,
       income:             income,
       expense:            expense,
       balance:            income - expense,

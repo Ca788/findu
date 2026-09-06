@@ -48,8 +48,9 @@ module Api
 
         def create
           category = UseCase::Financial::Category::CreateCategoryUseCase.new.call(
-            user: @user,
-            name: category_params[:name]
+            user:     @user,
+            name:     category_params[:name],
+            whatsapp: category_params[:whatsapp]
           )
 
           render json: ApiResponseSerializer.render(
@@ -88,7 +89,7 @@ module Api
         private
 
         def category_params
-          params.require(:category).permit(:name)
+          params.require(:category).permit(:name, :whatsapp)
         end
 
         def totals_filters

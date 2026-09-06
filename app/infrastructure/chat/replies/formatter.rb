@@ -32,11 +32,11 @@ module Chat
       # @param [Financial::Receipt]
       # @return [String]
       def receipt(receipt)
-        greeting = receipt.payer_name.present? ? "Olá, #{receipt.payer_name}! " : ""
         period   = "#{receipt.period_start.strftime('%m/%Y')} a #{receipt.period_end.strftime('%m/%Y')}"
+        category = receipt.payer_name.present? ? " da categoria #{receipt.payer_name}" : ""
 
-        "#{greeting}Segue seu comprovante por categoria referente a #{period}. " \
-          "Total: #{Formatters::Brl.call(receipt.total_amount)}."
+        "Segue o comprovante#{category} referente a #{period}. " \
+          "Total pago: #{Formatters::Brl.call(receipt.total_amount)}."
       end
 
       # @param [Financial::InstallmentPlan]

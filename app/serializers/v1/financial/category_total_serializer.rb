@@ -4,7 +4,7 @@ module V1
   module Financial
     class CategoryTotalSerializer < Blueprinter::Base
       view :default do
-        fields :category_id, :category_name, :income, :expense, :balance, :total
+        fields :category_id, :category_name, :whatsapp, :income, :expense, :balance, :total
       end
 
       view :extended do

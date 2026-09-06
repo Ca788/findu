@@ -15,6 +15,7 @@ module Api
 
         def index
           receipts = @user.receipts
+                          .by_category_id(params[:category_id])
                           .by_payer_phone(params[:payer_phone])
                           .by_status(params[:status])
                           .order(created_at: :desc)
@@ -87,12 +88,12 @@ module Api
 
         def receipt_params
           params.require(:receipt).permit(
-            :payer_phone, :payer_name, :from, :to, :transaction_type, :status, :deliver
+            :category_id, :from, :to, :transaction_type, :status, :deliver
           )
         end
 
         def generation_params
-          receipt_params.to_h.symbolize_keys.except(:deliver)
+          receipt_params.to_h.symbolize_keys.except(:deliver).compact_blank
         end
 
         def deliver?

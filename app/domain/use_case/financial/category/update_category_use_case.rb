@@ -7,7 +7,7 @@ class UseCase::Financial::Category::UpdateCategoryUseCase
   # @return [Financial::Category]
   def call(user:, id:, attributes:)
     category = user.categories.find(id)
-    category.update!(attributes.slice(:name))
+    category.update!(attributes.slice(:name, :whatsapp))
     category
   end
 end

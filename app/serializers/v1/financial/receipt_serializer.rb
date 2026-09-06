@@ -6,7 +6,7 @@ module V1
       identifier :id
 
       view :default do
-        fields :payer_name, :payer_phone, :period_start, :period_end,
+        fields :category_id, :payer_name, :payer_phone, :period_start, :period_end,
                :total_amount, :status, :sent_at
 
         field(:filename) { |receipt| receipt.filename }

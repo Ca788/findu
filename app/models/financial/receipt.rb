@@ -8,6 +8,7 @@ module Financial
     FILENAME_PREFIX = "comprovante"
 
     belongs_to :user
+    belongs_to :category, class_name: "Financial::Category", optional: true
 
     has_one_attached :file, dependent: :purge_later
 
@@ -15,8 +16,9 @@ module Financial
 
     validates :payer_phone, :period_start, :period_end, presence: true
 
-    scope :by_payer_phone, ->(phone)  { where(payer_phone: phone) if phone.present? }
-    scope :by_status,      ->(status) { where(status: status) if status.present? }
+    scope :by_payer_phone, ->(phone)       { where(payer_phone: phone) if phone.present? }
+    scope :by_category_id, ->(category_id) { where(category_id: category_id) if category_id.present? }
+    scope :by_status,      ->(status)      { where(status: status) if status.present? }
 
     # @return [String]
     def filename

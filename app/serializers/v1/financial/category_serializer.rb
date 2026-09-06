@@ -6,7 +6,7 @@ module V1
       identifier :id
 
       view :default do
-        fields :name
+        fields :name, :whatsapp
       end
 
       view :extended do

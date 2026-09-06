@@ -79,6 +79,13 @@ RSpec.describe UseCase::Financial::Category::ListCategoryTotalsUseCase do
       expect(totals.map(&:category_id)).to eq([salary.id])
     end
 
+    it "filters by category" do
+      totals = use_case.call(user: user, from: "2026-08", to: "2026-08", category_id: groceries.id)
+
+      expect(totals.map(&:category_id)).to eq([groceries.id])
+      expect(totals.first.expense).to eq(800)
+    end
+
     it "filters by payer phone" do
       create(:financial_transaction, :paid, user: user, category: groceries,
              transaction_type: "expense", amount: 40,

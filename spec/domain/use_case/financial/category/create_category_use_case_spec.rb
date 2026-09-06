@@ -24,6 +24,12 @@ RSpec.describe UseCase::Financial::Category::CreateCategoryUseCase do
         expect(category).to have_attributes(name: name, user_id: user.id)
       end
 
+      it "persists the whatsapp when provided" do
+        category = use_case.call(user: user, name: name, whatsapp: "+55 11 98888-7777")
+
+        expect(category.whatsapp).to eq("+5511988887777")
+      end
+
       it "does not create a category for another user" do
         other_user = create(:user)
 
