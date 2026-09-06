@@ -18,7 +18,7 @@ RSpec.describe UseCase::Financial::Receipt::DeliverReceiptUseCase do
 
       expect(provider).to have_received(:send_media).with(
         to:        receipt.payer_phone,
-        body:      a_string_including("Maria").and(a_string_including("R$400,00")),
+        body:      a_string_including("Maria").and(a_string_including("Total pago")).and(a_string_including("R$400,00")),
         media_url: "https://files.example.com/comprovante.pdf"
       )
     end

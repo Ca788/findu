@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_08_23_120100) do
+ActiveRecord::Schema[7.0].define(version: 2026_09_06_010001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -77,6 +77,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_08_23_120100) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
+    t.string "whatsapp"
     t.index ["user_id"], name: "index_categories_on_user_id"
   end
 
@@ -162,6 +163,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_08_23_120100) do
     t.jsonb "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "category_id"
+    t.index ["category_id"], name: "index_receipts_on_category_id"
     t.index ["status"], name: "index_receipts_on_status"
     t.index ["user_id", "created_at"], name: "index_receipts_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_receipts_on_user_id"
@@ -244,6 +247,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_08_23_120100) do
   add_foreign_key "insights", "users"
   add_foreign_key "installment_plans", "categories"
   add_foreign_key "installment_plans", "users"
+  add_foreign_key "receipts", "categories"
   add_foreign_key "receipts", "users"
   add_foreign_key "recurrence_rules", "categories"
   add_foreign_key "recurrence_rules", "users"

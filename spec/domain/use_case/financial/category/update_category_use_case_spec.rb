@@ -17,6 +17,16 @@ RSpec.describe UseCase::Financial::Category::UpdateCategoryUseCase do
         expect(category.reload.name).to eq("New name")
       end
 
+      it "persists the whatsapp when provided" do
+        use_case.call(
+          user: user,
+          id: category.id,
+          attributes: { whatsapp: "+55 11 98888-7777" }
+        )
+
+        expect(category.reload.whatsapp).to eq("+5511988887777")
+      end
+
       it "ignores attributes outside the allowed list" do
         original_user_id = category.user_id
         other_user = create(:user)

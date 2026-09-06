@@ -1,5 +1,35 @@
 # frozen_string_literal: true
 
+# == Schema Information
+#
+# Table name: receipts
+#
+#  id           :uuid             not null, primary key
+#  metadata     :jsonb
+#  payer_name   :string
+#  payer_phone  :string           not null
+#  period_end   :date             not null
+#  period_start :date             not null
+#  sent_at      :datetime
+#  status       :string           default("pending"), not null
+#  total_amount :decimal(10, 2)   default(0.0), not null
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#  category_id  :uuid
+#  user_id      :uuid             not null
+#
+# Indexes
+#
+#  index_receipts_on_category_id             (category_id)
+#  index_receipts_on_status                  (status)
+#  index_receipts_on_user_id                 (user_id)
+#  index_receipts_on_user_id_and_created_at  (user_id,created_at)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (category_id => categories.id)
+#  fk_rails_...  (user_id => users.id)
+#
 module Financial
   class Receipt < ApplicationRecord
     STATUSES = { pending: "pending", sent: "sent", failed: "failed" }.freeze

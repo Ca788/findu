@@ -98,7 +98,8 @@ module Api
             to:               params[:to],
             transaction_type: params[:transaction_type],
             status:           params[:status],
-            payer_phone:      params[:payer_phone]
+            payer_phone:      params[:payer_phone],
+            category_id:      params[:category_id]
           }
         end
       end
