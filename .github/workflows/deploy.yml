@@ -1,9 +1,8 @@
 name: Deploy to Fly.io
 
+# Produção ativa é a Azure. O Fly fica só como fallback manual —
+# o deploy automático quebrava o CI por fatura atrasada no Fly.
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
