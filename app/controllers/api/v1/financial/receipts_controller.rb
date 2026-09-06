@@ -46,7 +46,7 @@ module Api
             **generation_params
           )
 
-          ::Financial::DeliverReceiptJob.perform_later(receipt) if deliver?
+          enqueue_delivery(receipt) if deliver?
 
           render json: ApiResponseSerializer.render(
             receipt,
@@ -58,7 +58,7 @@ module Api
 
         def deliver
           receipt = @user.receipts.find(params[:id])
-          ::Financial::DeliverReceiptJob.perform_later(receipt)
+          enqueue_delivery(receipt)
 
           render json: ApiResponseSerializer.render(
             receipt,
@@ -99,6 +99,19 @@ module Api
         def deliver?
           value = receipt_params[:deliver]
           value.nil? || ActiveModel::Type::Boolean.new.cast(value)
+        end
+
+        def enqueue_delivery(receipt)
+          ::Financial::DeliverReceiptJob.perform_later(receipt)
+        rescue RedisClient::Error, ActiveJob::EnqueueError => e
+          Rails.logger.error("Receipt enqueue failed, delivering inline: #{e.class}: #{e.message}")
+          deliver_inline(receipt)
+        end
+
+        def deliver_inline(receipt)
+          ::Financial::DeliverReceiptJob.perform_now(receipt)
+        rescue StandardError => e
+          Rails.logger.error("Inline receipt delivery failed: #{e.class}: #{e.message}")
         end
       end
     end
