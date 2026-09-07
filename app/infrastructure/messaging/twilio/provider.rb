@@ -93,8 +93,8 @@ module Messaging
       end
 
       def whatsapp_address(number)
-        value = number.to_s
-        value.start_with?("whatsapp:") ? value : "whatsapp:#{value}"
+        value = Support::Phone.e164(number.to_s.delete_prefix("whatsapp:"))
+        "whatsapp:#{value}"
       end
     end
   end

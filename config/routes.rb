@@ -25,6 +25,8 @@ Rails.application.routes.draw do
 
       namespace :inbound do
         resources :messages, only: [:create]
+        get  "whatsapp", to: "whatsapp#verify"
+        post "whatsapp", to: "whatsapp#receive"
       end
 
       namespace :financial do

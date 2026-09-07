@@ -59,6 +59,8 @@ module Api
         def deliver
           receipt = @user.receipts.find(params[:id])
           enqueue_delivery(receipt)
+          receipt.reload
+          return render_delivery_failed(receipt) if receipt.status_failed?
 
           render json: ApiResponseSerializer.render(
             receipt,
@@ -72,7 +74,10 @@ module Api
           receipt = @user.receipts.find(params[:id])
           return render_missing_file unless receipt.file.attached?
 
-          redirect_to rails_blob_path(receipt.file, disposition: "attachment")
+          send_data receipt.file.download,
+                    filename:    receipt.filename,
+                    type:        ::Financial::Receipt::CONTENT_TYPE,
+                    disposition: "attachment"
         end
 
         private
@@ -84,6 +89,17 @@ module Api
             message:    "Receipt file is not available.",
             error_code: ErrorMapper.record_not_found.code
           ), status: :not_found
+        end
+
+        def render_delivery_failed(receipt)
+          render json: ApiResponseSerializer.render(
+            receipt,
+            serializer:      ::V1::Financial::ReceiptSerializer,
+            serializer_view: :extended,
+            success:         false,
+            message:         receipt.metadata["delivery_error"].presence || "WhatsApp delivery failed.",
+            error_code:      ErrorMapper.record_invalid.code
+          ), status: :unprocessable_entity
         end
 
         def receipt_params

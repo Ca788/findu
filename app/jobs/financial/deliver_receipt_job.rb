@@ -11,7 +11,7 @@ module Financial
       configure_url_options
 
       UseCase::Financial::Receipt::DeliverReceiptUseCase
-        .new(provider: Messaging::ProviderFactory.build)
+        .new(provider: Messaging::ProviderFactory.build_outbound)
         .call(receipt: receipt)
     end
 

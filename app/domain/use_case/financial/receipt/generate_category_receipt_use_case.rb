@@ -22,7 +22,7 @@ class UseCase::Financial::Receipt::GenerateCategoryReceiptUseCase
   # @return [Financial::Receipt]
   def call(user:, category_id:, from: nil, to: nil, transaction_type: nil, status: "paid")
     category = user.categories.find(category_id)
-    phone    = category.whatsapp.to_s.strip
+    phone = Support::Phone.e164(category.whatsapp)
     raise ArgumentError, "category whatsapp is required" if phone.blank?
 
     period_start = Support::DateParser.parse_month(from) || Date.current.beginning_of_month

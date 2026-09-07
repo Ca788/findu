@@ -10,13 +10,12 @@ module V1
                :total_amount, :status, :sent_at
 
         field(:filename) { |receipt| receipt.filename }
+        field(:file_attached) { |receipt| receipt.file.attached? }
       end
 
       view :extended do
         include_view :default
         fields :metadata, :created_at, :updated_at
-
-        field(:file_attached) { |receipt| receipt.file.attached? }
       end
     end
   end

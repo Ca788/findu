@@ -17,10 +17,30 @@ RSpec.describe UseCase::Financial::Receipt::DeliverReceiptUseCase do
       use_case.call(receipt: receipt)
 
       expect(provider).to have_received(:send_media).with(
-        to:        receipt.payer_phone,
+        to:        "+5511999999999",
         body:      a_string_including("Maria").and(a_string_including("Total pago")).and(a_string_including("R$400,00")),
         media_url: "https://files.example.com/comprovante.pdf"
       )
+    end
+
+    context "when the provider uploads the document" do
+      let(:provider) do
+        instance_double(
+          "Messaging::WhatsappCloud::Provider",
+          send_document: { "messages" => [{ "id" => "wamid.1" }] }
+        )
+      end
+
+      it "sends the PDF bytes instead of a hosted URL" do
+        use_case.call(receipt: receipt)
+
+        expect(provider).to have_received(:send_document).with(
+          hash_including(
+            to:       "+5511999999999",
+            filename: receipt.filename
+          )
+        )
+      end
     end
 
     it "marks the receipt as sent" do
