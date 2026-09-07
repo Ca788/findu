@@ -30,6 +30,12 @@ RSpec.describe UseCase::Financial::Category::CreateCategoryUseCase do
         expect(category.whatsapp).to eq("+5511988887777")
       end
 
+      it "normalizes a local Brazilian mobile to E.164" do
+        category = use_case.call(user: user, name: name, whatsapp: "71993116322")
+
+        expect(category.whatsapp).to eq("+5571993116322")
+      end
+
       it "does not create a category for another user" do
         other_user = create(:user)
 

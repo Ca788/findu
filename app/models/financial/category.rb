@@ -34,7 +34,7 @@ module Financial
     def normalize_whatsapp
       return if whatsapp.blank?
 
-      self.whatsapp = whatsapp.to_s.gsub(/[^\d+]/, "")
+      self.whatsapp = Support::Phone.e164(whatsapp)
     end
   end
 end
